@@ -37,13 +37,11 @@ func NewRouter(db *sql.DB, cfg config.Config) http.Handler {
 	// Общедоступные маршруты
 	usersService := handle.NewUsersService(db)
 	usersHandler := handle.NewUsersHandler(usersService)
-
 	r.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
 
 	// Swagger-документация
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
-	// Настройка CORS
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://chechenmail.vercel.app"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

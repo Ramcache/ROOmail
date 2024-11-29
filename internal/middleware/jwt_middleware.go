@@ -12,6 +12,6 @@ func JWTMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
-		next.ServeHTTP(w, r) // Передаём управление следующему обработчику
+		next.ServeHTTP(w, r)
 	})
 }

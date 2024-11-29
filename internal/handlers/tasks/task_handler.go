@@ -2,14 +2,16 @@ package tasks
 
 import (
 	"ROOmail/internal/models"
+	"ROOmail/pkg/logger"
 	"ROOmail/pkg/utils"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 )
+
+var log = logger.GetLogger()
 
 type TaskHandler struct {
 	service *TaskService
@@ -17,18 +19,6 @@ type TaskHandler struct {
 
 func NewTaskHandler(service *TaskService) *TaskHandler {
 	return &TaskHandler{service: service}
-}
-
-// RespondJSON is a helper function to respond with JSON data
-func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
-	response, err := json.Marshal(payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(response)
 }
 
 // GetTasksHandler получает список задач
@@ -47,23 +37,22 @@ func (h *TaskHandler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 	schoolID := queryValues.Get("school_id")
 	dueDate := queryValues.Get("due_date")
 
-	// Извлечение userID из токена
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
-		// Использование ошибки для формирования сообщения
-		RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
+		log.Warn("Неавторизованный запрос: ", err)
+		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
 
-	// Извлечение задач для конкретного пользователя
 	tasks, err := h.service.GetTaskForUser(userID, schoolID, dueDate)
 	if err != nil {
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении списка задач")
+		log.Error("Ошибка получения задач для пользователя: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении списка задач")
 		return
 	}
 
-	// Ответ с задачами
-	RespondJSON(w, http.StatusOK, tasks)
+	log.Info("Список задач успешно получен для пользователя: ", userID)
+	utils.RespondJSON(w, http.StatusOK, tasks)
 }
 
 // CreateTaskHandler создает новую задачу
@@ -83,32 +72,34 @@ func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newTask)
 	if err != nil {
-		RespondJSON(w, http.StatusBadRequest, "Некорректный запрос")
+		log.Warn("Некорректный запрос при создании задачи: ", err)
+		utils.RespondJSON(w, http.StatusBadRequest, "Некорректный запрос")
 		return
 	}
 
-	// Извлечение user_id из токена
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
-		RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
+		log.Warn("Неавторизованный запрос при создании задачи: ", err)
+		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
 	newTask.UserID = userID
 
 	if newTask.Title == "" {
-		RespondJSON(w, http.StatusBadRequest, "Название обязательно")
+		log.Warn("Пустое название задачи при создании")
+		utils.RespondJSON(w, http.StatusBadRequest, "Название обязательно")
 		return
 	}
 
-	// Создание задачи через сервис
 	err = h.service.CreateTask(&newTask)
 	if err != nil {
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при сохранении задачи")
+		log.Error("Ошибка при сохранении задачи: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при сохранении задачи")
 		return
 	}
 
-	// Возврат созданной задачи с присвоенным идентификатором
-	RespondJSON(w, http.StatusCreated, newTask)
+	log.Info("Задача успешно создана для пользователя: ", userID)
+	utils.RespondJSON(w, http.StatusCreated, newTask)
 }
 
 // GetTaskByIDHandler получает задачу по ID
@@ -126,28 +117,32 @@ func (h *TaskHandler) GetTaskByIDHandler(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// Получение задачи из базы
 	task, err := h.service.GetTaskByID(id)
 	if err != nil {
 		if err.Error() == "task not found" {
-			RespondJSON(w, http.StatusNotFound, fmt.Sprintf("Задача с ID %s не найдена", id))
+			log.Warn("Задача с ID не найдена: ", id)
+			utils.RespondJSON(w, http.StatusNotFound, fmt.Sprintf("Задача с ID %s не найдена", id))
 			return
 		}
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении задачи")
+		log.Error("Ошибка при получении задачи: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении задачи")
 		return
 	}
 
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
-		RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
+		log.Warn("Неавторизованный запрос на получение задачи: ", err)
+		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
 	if task.UserID != userID {
-		RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
+		log.Warn("Пользователь с ID ", userID, " пытался получить доступ к задаче, принадлежащей другому пользователю")
+		utils.RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
 		return
 	}
 
-	RespondJSON(w, http.StatusOK, task)
+	log.Info("Задача с ID успешно получена для пользователя: ", id, userID)
+	utils.RespondJSON(w, http.StatusOK, task)
 }
 
 // UpdateTaskHandler обновляет задачу
@@ -166,44 +161,48 @@ func (h *TaskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// Проверка существования задачи
 	task, err := h.service.GetTaskByID(id)
 	if err != nil {
 		if err.Error() == "task not found" {
-			RespondJSON(w, http.StatusNotFound, "Задача не найдена")
+			log.Warn("Задача с ID не найдена для обновления: ", id)
+			utils.RespondJSON(w, http.StatusNotFound, "Задача не найдена")
 			return
 		}
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении задачи")
+		log.Error("Ошибка при получении задачи для обновления: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении задачи")
 		return
 	}
 
-	// Проверка userID
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
-		RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
+		log.Warn("Неавторизованный запрос на обновление задачи: ", err)
+		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
 	if task.UserID != userID {
-		RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
+		log.Warn("Пользователь с ID ", userID, " пытался обновить задачу, принадлежащую другому пользователю")
+		utils.RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
 		return
 	}
 
-	// Декодирование обновленных данных
 	var updatedTask models.Task
 	decoder := json.NewDecoder(r.Body)
 	err = decoder.Decode(&updatedTask)
 	if err != nil {
-		RespondJSON(w, http.StatusBadRequest, "Некорректный запрос")
+		log.Warn("Некорректный запрос при обновлении задачи: ", err)
+		utils.RespondJSON(w, http.StatusBadRequest, "Некорректный запрос")
 		return
 	}
 
 	err = h.service.UpdateTaskInDB(id, updatedTask)
 	if err != nil {
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при обновлении задачи")
+		log.Error("Ошибка при обновлении задачи в базе данных: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при обновлении задачи")
 		return
 	}
 
-	RespondJSON(w, http.StatusOK, updatedTask)
+	log.Info("Задача с ID успешно обновлена: ", id)
+	utils.RespondJSON(w, http.StatusOK, updatedTask)
 }
 
 // DeleteTaskHandler удаляет задачу
@@ -220,35 +219,38 @@ func (h *TaskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	// Проверка существования задачи
 	task, err := h.service.GetTaskByID(id)
 	if err != nil {
 		if err.Error() == "task not found" {
-			RespondJSON(w, http.StatusNotFound, "Задача не найдена")
+			log.Warn("Задача с ID не найдена для удаления: ", id)
+			utils.RespondJSON(w, http.StatusNotFound, "Задача не найдена")
 			return
 		}
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении задачи")
+		log.Error("Ошибка при получении задачи для удаления: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении задачи")
 		return
 	}
 
-	// Проверка userID
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
-		RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
+		log.Warn("Неавторизованный запрос на удаление задачи: ", err)
+		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
 	if task.UserID != userID {
-		RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
+		log.Warn("Пользователь с ID ", userID, " пытался удалить задачу, принадлежащую другому пользователю")
+		utils.RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
 		return
 	}
 
 	err = h.service.DeleteTask(id)
 	if err != nil {
-		log.Printf("Ошибка при удалении задачи: %v", err)
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при удалении задачи")
+		log.Error("Ошибка при удалении задачи: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при удалении задачи")
 		return
 	}
 
+	log.Info("Задача с ID успешно удалена: ", id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -267,7 +269,8 @@ func (h *TaskHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) 
 
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
-		RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
+		log.Warn("Неавторизованный запрос на загрузку файлов: ", err)
+		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
 
@@ -276,11 +279,13 @@ func (h *TaskHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) 
 
 	err = h.service.UploadFilesForUser(files, userID)
 	if err != nil {
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при обработке файлов: "+err.Error())
+		log.Error("Ошибка при загрузке файлов для пользователя: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при обработке файлов: "+err.Error())
 		return
 	}
 
-	RespondJSON(w, http.StatusOK, "Файлы успешно загружены")
+	log.Info("Файлы успешно загружены для пользователя: ", userID)
+	utils.RespondJSON(w, http.StatusOK, "Файлы успешно загружены")
 }
 
 // DownloadFileHandler скачивает файл
@@ -300,35 +305,40 @@ func (h *TaskHandler) DownloadFileHandler(w http.ResponseWriter, r *http.Request
 
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
-		RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
+		log.Warn("Неавторизованный запрос на скачивание файла: ", err)
+		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
 
-	// Проверка, привязан ли файл к задаче пользователя
-	task, err := h.service.GetTaskByFileID(fileID) // Новый метод в сервисе
+	task, err := h.service.GetTaskByFileID(fileID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			RespondJSON(w, http.StatusNotFound, "Файл не найден")
+			log.Warn("Файл с ID не найден: ", fileID)
+			utils.RespondJSON(w, http.StatusNotFound, "Файл не найден")
 			return
 		}
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при проверке задачи для файла: "+err.Error())
+		log.Error("Ошибка при проверке задачи для файла: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при проверке задачи для файла: "+err.Error())
 		return
 	}
 
 	if task.UserID != userID {
-		RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
+		log.Warn("Пользователь с ID ", userID, " пытался скачать файл, принадлежащий другому пользователю")
+		utils.RespondJSON(w, http.StatusForbidden, "Доступ запрещён")
 		return
 	}
 
 	// Получение пути к файлу
 	filePath, err := h.service.FetchFilePath(fileID)
 	if err != nil {
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении пути к файлу: "+err.Error())
+		log.Error("Ошибка при получении пути к файлу: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при получении пути к файлу: "+err.Error())
 		return
 	}
 
 	err = h.service.ServeFile(w, filePath)
 	if err != nil {
-		RespondJSON(w, http.StatusInternalServerError, "Ошибка при скачивании файла: "+err.Error())
+		log.Error("Ошибка при скачивании файла: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при скачивании файла: "+err.Error())
 	}
 }

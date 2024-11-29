@@ -1,0 +1,33 @@
+name: ROOmail 
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest 
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Deploy using ssh 
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }} 
+        key: ${{ secrets.PRIVATE_KEY }} 
+        port: 22 
+        script: |
+          set -e # Остановка на первой ошибке
+          echo "Navigating to the project directory..."
+          cd ~/ROOmail || exit 1 # Убедиться, что директория существует
+          echo "Pulling latest changes..."
+          git pull origin main
+          echo "Checking repository status..."
+          git status
+          echo "Tidying Go modules..."
+          go mod tidy
+          echo "Starting the application..."
+          go run ./main

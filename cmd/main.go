@@ -5,6 +5,7 @@ import (
 	_ "ROOmail/docs"
 	"ROOmail/internal/router"
 	"ROOmail/pkg/db"
+	"ROOmail/pkg/logger"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -30,6 +31,12 @@ func main() {
 	if err != nil {
 		log.Printf("Error loading .env file: %v", err)
 	}
+	// Инициализация логгера
+	logger.InitLogger()
+
+	// Пример использования
+	log := logger.GetLogger()
+	log.Info("Приложение запущено")
 
 	// Загрузка конфигурации
 	cfg := config.LoadConfig()
@@ -44,11 +51,11 @@ func main() {
 	r := router.NewRouter(database, cfg)
 
 	// Пути к сертификату и ключу
-	certFile := `C:\Users\Рамзан\server.crt`
-	keyFile := `C:\Users\Рамзан\server.key`
+	certFile := `/ROOmail/sertificate/server.crt`
+	keyFile := `/ROOmail/sertificate/server.key`
 
 	// Запуск HTTPS-сервера
-	log.Printf("Server started at https://%s", cfg.ServerAddress)
+	log.Info("Server started at https://%s", cfg.ServerAddress)
 	err = http.ListenAndServeTLS(cfg.ServerAddress, certFile, keyFile, r)
 	if err != nil {
 		log.Fatalf("Failed to start HTTPS server: %v", err)

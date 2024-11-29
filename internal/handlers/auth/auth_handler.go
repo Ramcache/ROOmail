@@ -1,13 +1,17 @@
 package auth
 
 import (
+	"ROOmail/pkg/logger"
 	"ROOmail/pkg/utils"
 	"encoding/json"
 	"net/http"
 	"strings"
 )
 
-var authService = NewAuthService()
+var (
+	authService = NewAuthService()
+	log         = logger.GetLogger()
+)
 
 type LoginRequest struct {
 	Username string `json:"username"`
@@ -35,19 +39,23 @@ type LoginResponse struct {
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Некорректный запрос", http.StatusBadRequest)
+		log.Error("Ошибка декодирования тела запроса: ", err)
+		utils.RespondJSON(w, http.StatusBadRequest, "Некорректный запрос")
 		return
 	}
 
+	log.Info("Попытка входа пользователя: ", req.Username)
 	user, err := authService.AuthenticateUser(req.Username, req.Password)
 	if err != nil {
-		http.Error(w, "Неверное имя пользователя или пароль", http.StatusUnauthorized)
+		log.Warn("Неудачная попытка входа пользователя: ", req.Username)
+		utils.RespondJSON(w, http.StatusUnauthorized, "Неверное имя пользователя или пароль")
 		return
 	}
 
 	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
 	if err != nil {
-		http.Error(w, "Ошибка при генерации токена", http.StatusInternalServerError)
+		log.Error("Ошибка генерации токена для пользователя: ", req.Username, " - ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при генерации токена")
 		return
 	}
 
@@ -56,8 +64,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Username: user.Username,
 		Role:     user.Role,
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	log.Info("Успешный вход пользователя: ", user.Username)
+	utils.RespondJSON(w, http.StatusOK, resp)
 }
 
 // LogoutHandler выполняет выход пользователя
@@ -73,18 +81,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		http.Error(w, "Требуется заголовок авторизации", http.StatusUnauthorized)
+		log.Warn("Попытка выхода без заголовка авторизации")
+		utils.RespondJSON(w, http.StatusUnauthorized, "Требуется заголовок авторизации")
 		return
 	}
 
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		http.Error(w, "Некорректный формат заголовка авторизации", http.StatusUnauthorized)
+		log.Warn("Некорректный формат заголовка авторизации: ", authHeader)
+		utils.RespondJSON(w, http.StatusUnauthorized, "Некорректный формат заголовка авторизации")
 		return
 	}
 
 	token := parts[1]
 	authService.RevokeToken(token)
+	log.Info("Пользователь вышел, токен отозван: ", token)
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
