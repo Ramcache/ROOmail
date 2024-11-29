@@ -4,17 +4,25 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"log"
 )
 
 var DB *sql.DB
 
-func InitDB(dataSourceName string) error {
-	var err error
-	DB, err = sql.Open("pgx", dataSourceName)
+func InitDB(databaseURL string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", databaseURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return DB.Ping()
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("Successfully connected to the database")
+	DB = db
+	return db, nil
 }
 
 type User struct {

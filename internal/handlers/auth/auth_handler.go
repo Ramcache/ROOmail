@@ -20,24 +20,34 @@ type LoginResponse struct {
 	Role     string `json:"role"`
 }
 
+// LoginHandler выполняет вход пользователя
+// @Summary Вход пользователя
+// @Description Аутентификация пользователя и возвращение JWT токена
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param loginRequest body LoginRequest true "Данные для входа"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} string "Некорректный запрос"
+// @Failure 401 {object} string "Неверное имя пользователя или пароль"
+// @Failure 500 {object} string "Ошибка при генерации токена"
+// @Router /login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		http.Error(w, "Некорректный запрос", http.StatusBadRequest)
 		return
 	}
 
-	// Аутентификация пользователя через AuthService
 	user, err := authService.AuthenticateUser(req.Username, req.Password)
 	if err != nil {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		http.Error(w, "Неверное имя пользователя или пароль", http.StatusUnauthorized)
 		return
 	}
 
-	// Генерация JWT токена
-	token, err := utils.GenerateJWT(user.Username, user.Role)
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
 	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
+		http.Error(w, "Ошибка при генерации токена", http.StatusInternalServerError)
 		return
 	}
 
@@ -50,16 +60,26 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+// LogoutHandler выполняет выход пользователя
+// @Summary Выход пользователя
+// @Description Выход пользователя и отзыв JWT токена
+// @Tags auth
+// @Produce json
+// @Param Authorization header string true "Bearer токен"
+// @Success 303 "Перенаправление на страницу входа"
+// @Failure 401 {object} string "Требуется заголовок авторизации"
+// @Failure 401 {object} string "Некорректный формат заголовка авторизации"
+// @Router /logout [get]
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		http.Error(w, "Authorization header required", http.StatusUnauthorized)
+		http.Error(w, "Требуется заголовок авторизации", http.StatusUnauthorized)
 		return
 	}
 
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
-		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		http.Error(w, "Некорректный формат заголовка авторизации", http.StatusUnauthorized)
 		return
 	}
 

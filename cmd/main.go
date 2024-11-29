@@ -2,6 +2,7 @@ package main
 
 import (
 	"ROOmail/config"
+	_ "ROOmail/docs"
 	"ROOmail/internal/router"
 	"ROOmail/pkg/db"
 	"github.com/joho/godotenv"
@@ -9,26 +10,35 @@ import (
 	"net/http"
 )
 
+// @title Документация ROOmail API
+// @version 1.0
+// @description Это документация API для проекта ROOmail.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name Поддержка API
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /
 func main() {
-	// Загрузка переменных окружения из файла .env
 	err := godotenv.Load()
 	if err != nil {
 		log.Printf("Error loading .env file: %v", err)
 	}
 
-	// Загрузка конфигурации
 	cfg := config.LoadConfig()
 
-	// Инициализация базы данных
-	err = db.InitDB(cfg.DatabaseURL)
+	database, err := db.InitDB(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Could not connect to the database: %v", err)
+		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Инициализация маршрутизатора
-	r := router.NewRouter()
+	r := router.NewRouter(database, cfg)
 
-	// Запуск сервера
 	log.Printf("Server started at %s", cfg.ServerAddress)
 	log.Fatal(http.ListenAndServe(cfg.ServerAddress, r))
 }

@@ -1,0 +1,339 @@
+basePath: /
+definitions:
+  auth.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  auth.LoginResponse:
+    properties:
+      role:
+        type: string
+      token:
+        type: string
+      username:
+        type: string
+    type: object
+  models.Task:
+    properties:
+      description:
+        type: string
+      due_date:
+        type: string
+      file:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      priority:
+        type: string
+      schools:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.UsersList:
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: Поддержка API
+    url: http://www.swagger.io/support
+  description: Это документация API для проекта ROOmail.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Документация ROOmail API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентификация пользователя и возвращение JWT токена
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponse'
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "401":
+          description: Неверное имя пользователя или пароль
+          schema:
+            type: string
+        "500":
+          description: Ошибка при генерации токена
+          schema:
+            type: string
+      summary: Вход пользователя
+      tags:
+      - auth
+  /logout:
+    get:
+      description: Выход пользователя и отзыв JWT токена
+      parameters:
+      - description: Bearer токен
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "303":
+          description: Перенаправление на страницу входа
+        "401":
+          description: Некорректный формат заголовка авторизации
+          schema:
+            type: string
+      summary: Выход пользователя
+      tags:
+      - auth
+  /tasks:
+    get:
+      consumes:
+      - application/json
+      description: Получить список задач по school_id и due_date
+      parameters:
+      - description: ID школы
+        in: query
+        name: school_id
+        type: string
+      - description: 'Срок выполнения задачи (формат: YYYY-MM-DD)'
+        in: query
+        name: due_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+        "500":
+          description: Ошибка при получении списка задач
+          schema:
+            type: string
+      summary: Получение списка задач
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Создать новую задачу
+      parameters:
+      - description: Данные новой задачи
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "500":
+          description: Ошибка при сохранении задачи
+          schema:
+            type: string
+      summary: Создание задачи
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удалить задачу по ее уникальному идентификатору
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Задача успешно удалена
+        "500":
+          description: Ошибка при удалении задачи
+          schema:
+            type: string
+      summary: Удаление задачи
+      tags:
+      - tasks
+    get:
+      consumes:
+      - application/json
+      description: Получить задачу по ее уникальному идентификатору
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "404":
+          description: Задача не найдена
+          schema:
+            type: string
+        "500":
+          description: Ошибка при получении задачи
+          schema:
+            type: string
+      summary: Получение задачи по ID
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Обновить существующую задачу
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Обновленные данные задачи
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "500":
+          description: Ошибка при обновлении задачи
+          schema:
+            type: string
+      summary: Обновление задачи
+      tags:
+      - tasks
+  /tasks/download/{fileID}:
+    get:
+      consumes:
+      - application/json
+      description: Скачать файл по его уникальному идентификатору
+      parameters:
+      - description: ID файла
+        in: path
+        name: fileID
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Файл успешно скачан
+        "404":
+          description: Файл не найден
+          schema:
+            type: string
+        "500":
+          description: Ошибка при скачивании файла
+          schema:
+            type: string
+      summary: Скачивание файла
+      tags:
+      - files
+  /tasks/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загрузить файлы
+      parameters:
+      - description: Файлы для загрузки
+        in: formData
+        name: files
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Файлы успешно загружены
+        "500":
+          description: Ошибка при обработке файлов
+          schema:
+            type: string
+      summary: Загрузка файлов
+      tags:
+      - files
+  /users_list:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список пользователей с возможностью фильтрации по имени
+        пользователя.
+      parameters:
+      - description: Фильтр по имени пользователя (поддерживает подстроку)
+        in: query
+        name: username
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.UsersList'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список пользователей
+      tags:
+      - Users
+swagger: "2.0"
