@@ -120,14 +120,13 @@ func (s *TaskService) GetTask(schoolID, dueDate string) ([]models.Task, error) {
 
 // GetTaskForUser retrieves tasks for a specific user, optionally filtering by school ID and/or due date
 func (s *TaskService) GetTaskForUser(userID int, schoolID, dueDate string) ([]models.Task, error) {
-	// Преобразуем userID из int в строку
 	userIDStr := strconv.Itoa(userID)
 
 	query := `SELECT id, user_id, title, description, due_date, file, priority, schools FROM tasks WHERE user_id = $1`
 	var filters []string
 	var args []interface{}
 
-	args = append(args, userIDStr) // userID теперь преобразован в строку
+	args = append(args, userIDStr)
 
 	if schoolID != "" {
 		filters = append(filters, `schools LIKE '%' || $2 || '%'`)
@@ -201,14 +200,12 @@ func (s *TaskService) UploadFiles(files []*multipart.FileHeader) error {
 func (s *TaskService) UploadFilesForUser(files []*multipart.FileHeader, userID int) error {
 	uploadDir := fmt.Sprintf("./uploads/user_%d", userID)
 
-	// Создание директории при её отсутствии
 	err := os.MkdirAll(uploadDir, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("failed to create upload directory: %w", err)
 	}
 
 	for _, fileHeader := range files {
-		// Добавление уникальности имени файла
 		uniqueName := fmt.Sprintf("%d_%s", time.Now().UnixNano(), fileHeader.Filename)
 		filePath := filepath.Join(uploadDir, uniqueName)
 		if err := s.uploadFileToPath(fileHeader, filePath); err != nil {
@@ -254,7 +251,6 @@ func (s *TaskService) ServeFile(w http.ResponseWriter, filePath string) error {
 	}
 	defer file.Close()
 
-	// Определение MIME-типа
 	buffer := make([]byte, 512)
 	_, err = file.Read(buffer)
 	if err != nil {
@@ -329,12 +325,4 @@ func (s *TaskService) uploadFileToPath(fileHeader *multipart.FileHeader, filePat
 	}
 
 	return nil
-}
-
-// splitCommaSeparated converts a comma-separated string to a slice of strings
-func splitCommaSeparated(input string) []string {
-	if input == "" {
-		return []string{}
-	}
-	return strings.Split(input, ",")
 }

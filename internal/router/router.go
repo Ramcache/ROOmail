@@ -6,6 +6,7 @@ import (
 	"ROOmail/internal/handlers/handle"
 	"ROOmail/internal/handlers/tasks"
 	"ROOmail/internal/middleware"
+	"ROOmail/pkg/logger"
 	"database/sql"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -15,6 +16,7 @@ import (
 
 func NewRouter(db *sql.DB, cfg config.Config) http.Handler {
 	r := mux.NewRouter()
+	log := logger.NewLogger()
 
 	// Маршруты для аутентификации
 	r.HandleFunc("/login", auth.LoginHandler).Methods("POST")
@@ -22,7 +24,7 @@ func NewRouter(db *sql.DB, cfg config.Config) http.Handler {
 
 	// Маршруты для задач
 	taskService := tasks.NewTaskService(db)
-	taskHandler := tasks.NewTaskHandler(taskService)
+	taskHandler := tasks.NewTaskHandler(taskService, log)
 
 	// Защищённые маршруты для задач
 	protectedRoutes := r.PathPrefix("/tasks").Subrouter()
@@ -36,7 +38,7 @@ func NewRouter(db *sql.DB, cfg config.Config) http.Handler {
 	protectedRoutes.HandleFunc("/download/{fileID}", taskHandler.DownloadFileHandler).Methods("GET")
 	// Общедоступные маршруты
 	usersService := handle.NewUsersService(db)
-	usersHandler := handle.NewUsersHandler(usersService)
+	usersHandler := handle.NewUsersHandler(usersService, log)
 	r.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
 
 	// Swagger-документация

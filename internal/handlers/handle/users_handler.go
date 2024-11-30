@@ -8,10 +8,15 @@ import (
 
 type UsersHandler struct {
 	service *UsersService
+	log     logger.Logger
 }
 
-func NewUsersHandler(service *UsersService) *UsersHandler {
-	return &UsersHandler{service: service}
+func NewUsersHandler(service *UsersService, log logger.Logger) *UsersHandler {
+	return &UsersHandler{
+		service: service,
+		log:     log,
+	}
+
 }
 
 // UsersSelectHandler
@@ -25,17 +30,16 @@ func NewUsersHandler(service *UsersService) *UsersHandler {
 // @Failure      500 {object} map[string]string
 // @Router       /users_list [get]
 func (h *UsersHandler) UsersSelectHandler(w http.ResponseWriter, r *http.Request) {
-	log := logger.NewLogger()
 	usernameFilter := r.URL.Query().Get("username")
-	log.Info("Запрос списка пользователей. Фильтр по имени пользователя: ", usernameFilter)
+	h.log.Info("Запрос списка пользователей. Фильтр по имени пользователя: ", usernameFilter)
 
 	users, err := h.service.GetUsers(usernameFilter)
 	if err != nil {
-		log.Error("Ошибка получения пользователей: ", err)
+		h.log.Error("Ошибка получения пользователей: ", err)
 		http.Error(w, "Ошибка получения пользователей", http.StatusInternalServerError)
 		return
 	}
 
-	log.Info("Список пользователей успешно получен")
+	h.log.Info("Список пользователей успешно получен")
 	utils.RespondJSON(w, http.StatusOK, users)
 }

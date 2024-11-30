@@ -11,18 +11,8 @@ type AuthService struct {
 	blacklist sync.Map
 }
 
-var instance *AuthService
-var once sync.Once
-
 func NewAuthService() *AuthService {
 	return &AuthService{}
-}
-
-func AuthServiceInstance() *AuthService {
-	once.Do(func() {
-		instance = &AuthService{}
-	})
-	return instance
 }
 
 func (s *AuthService) AuthenticateUser(username, password string) (*db.User, error) {
