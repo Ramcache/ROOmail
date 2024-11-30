@@ -1,4 +1,3 @@
-basePath: /
 definitions:
   auth.LoginRequest:
     properties:
@@ -18,6 +17,8 @@ definitions:
     type: object
   models.Task:
     properties:
+      assigned_at:
+        type: string
       description:
         type: string
       due_date:
@@ -44,19 +45,8 @@ definitions:
       username:
         type: string
     type: object
-host: localhost:8080
 info:
-  contact:
-    email: support@swagger.io
-    name: Поддержка API
-    url: http://www.swagger.io/support
-  description: Это документация API для проекта ROOmail.
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
-  title: Документация ROOmail API
-  version: "1.0"
+  contact: {}
 paths:
   /login:
     post:
@@ -146,7 +136,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Создать новую задачу
+      description: Создать новую задачу и отправить её пользователю/пользователям
       parameters:
       - description: Данные новой задачи
         in: body
@@ -154,6 +144,14 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.Task'
+      - description: Список ID пользователей для назначения задачи
+        in: body
+        name: user_ids
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
       produces:
       - application/json
       responses:

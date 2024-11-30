@@ -9,4 +9,5 @@ type Task struct {
 	File        []string `json:"file"`
 	Priority    string   `json:"priority"`
 	Schools     string   `json:"schools"`
+	AssignedAt  string   `json:"assigned_at,omitempty"`
 }

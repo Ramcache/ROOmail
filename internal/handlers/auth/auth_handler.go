@@ -10,7 +10,6 @@ import (
 
 var (
 	authService = NewAuthService()
-	log         = logger.GetLogger()
 )
 
 type LoginRequest struct {
@@ -37,6 +36,7 @@ type LoginResponse struct {
 // @Failure 500 {object} string "Ошибка при генерации токена"
 // @Router /login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error("Ошибка декодирования тела запроса: ", err)
@@ -79,6 +79,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 401 {object} string "Некорректный формат заголовка авторизации"
 // @Router /logout [get]
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		log.Warn("Попытка выхода без заголовка авторизации")

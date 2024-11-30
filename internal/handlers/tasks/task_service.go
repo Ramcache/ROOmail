@@ -60,6 +60,17 @@ func (s *TaskService) CreateTask(task *models.Task) error {
 	return nil
 }
 
+func (s *TaskService) SendTaskToUsers(task *models.Task, userIDs []string) error {
+	for _, userID := range userIDs {
+		query := "INSERT INTO task_assignments (task_id, user_id, assigned_at) VALUES ($1, $2, $3)"
+		_, err := s.db.Exec(query, task.ID, userID, time.Now())
+		if err != nil {
+			return fmt.Errorf("ошибка при назначении задачи пользователю %s: %w", userID, err)
+		}
+	}
+	return nil
+}
+
 // GetTask retrieves tasks by school ID and/or due date
 func (s *TaskService) GetTask(schoolID, dueDate string) ([]models.Task, error) {
 	query := `SELECT id, user_id, title, description, due_date, file, priority, schools FROM tasks`

@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-var log = logger.GetLogger() // Получаем глобальный логгер
-
 type UsersHandler struct {
 	service *UsersService
 }
@@ -27,6 +25,7 @@ func NewUsersHandler(service *UsersService) *UsersHandler {
 // @Failure      500 {object} map[string]string
 // @Router       /users_list [get]
 func (h *UsersHandler) UsersSelectHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
 	usernameFilter := r.URL.Query().Get("username")
 	log.Info("Запрос списка пользователей. Фильтр по имени пользователя: ", usernameFilter)
 

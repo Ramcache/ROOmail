@@ -6,12 +6,11 @@ import (
 	"ROOmail/pkg/utils"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 )
-
-var log = logger.GetLogger()
 
 type TaskHandler struct {
 	service *TaskService
@@ -33,6 +32,8 @@ func NewTaskHandler(service *TaskService) *TaskHandler {
 // @Failure 500 {object} string "Ошибка при получении списка задач"
 // @Router /tasks [get]
 func (h *TaskHandler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
+
 	queryValues := r.URL.Query()
 	schoolID := queryValues.Get("school_id")
 	dueDate := queryValues.Get("due_date")
@@ -55,22 +56,27 @@ func (h *TaskHandler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, tasks)
 }
 
-// CreateTaskHandler создает новую задачу
+// CreateTaskHandler создает новую задачу и отправляет её одному или нескольким пользователям
 // @Summary Создание задачи
-// @Description Создать новую задачу
+// @Description Создать новую задачу и отправить её пользователю/пользователям
 // @Tags tasks
 // @Accept json
 // @Produce json
 // @Param task body models.Task true "Данные новой задачи"
+// @Param user_ids body []string true "Список ID пользователей для назначения задачи"
 // @Success 201 {object} models.Task
 // @Failure 400 {object} string "Некорректный запрос"
 // @Failure 500 {object} string "Ошибка при сохранении задачи"
 // @Router /tasks [post]
 func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	var newTask models.Task
+	log := logger.NewLogger()
+	var requestBody struct {
+		Task    models.Task `json:"task"`
+		UserIDs []string    `json:"user_ids"`
+	}
 
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&newTask)
+	err := decoder.Decode(&requestBody)
 	if err != nil {
 		log.Warn("Некорректный запрос при создании задачи: ", err)
 		utils.RespondJSON(w, http.StatusBadRequest, "Некорректный запрос")
@@ -83,23 +89,31 @@ func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 		utils.RespondJSON(w, http.StatusUnauthorized, fmt.Sprintf("Неавторизовано: %v", err))
 		return
 	}
-	newTask.UserID = userID
+	requestBody.Task.UserID = userID
 
-	if newTask.Title == "" {
+	if requestBody.Task.Title == "" {
 		log.Warn("Пустое название задачи при создании")
 		utils.RespondJSON(w, http.StatusBadRequest, "Название обязательно")
 		return
 	}
 
-	err = h.service.CreateTask(&newTask)
+	err = h.service.CreateTask(&requestBody.Task)
 	if err != nil {
 		log.Error("Ошибка при сохранении задачи: ", err)
 		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при сохранении задачи")
 		return
 	}
 
-	log.Info("Задача успешно создана для пользователя: ", userID)
-	utils.RespondJSON(w, http.StatusCreated, newTask)
+	// Отправка задачи пользователям
+	err = h.service.SendTaskToUsers(&requestBody.Task, requestBody.UserIDs)
+	if err != nil {
+		log.Error("Ошибка при отправке задачи пользователям: ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при отправке задачи пользователям")
+		return
+	}
+
+	log.Info("Задача успешно создана и отправлена пользователям: ", requestBody.UserIDs)
+	utils.RespondJSON(w, http.StatusCreated, requestBody.Task)
 }
 
 // GetTaskByIDHandler получает задачу по ID
@@ -114,6 +128,7 @@ func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} string "Ошибка при получении задачи"
 // @Router /tasks/{id} [get]
 func (h *TaskHandler) GetTaskByIDHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -158,6 +173,8 @@ func (h *TaskHandler) GetTaskByIDHandler(w http.ResponseWriter, r *http.Request)
 // @Failure 500 {object} string "Ошибка при обновлении задачи"
 // @Router /tasks/{id} [put]
 func (h *TaskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
+
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -216,6 +233,8 @@ func (h *TaskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} string "Ошибка при удалении задачи"
 // @Router /tasks/{id} [delete]
 func (h *TaskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
+
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -265,7 +284,12 @@ func (h *TaskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} string "Ошибка при обработке файлов"
 // @Router /tasks/upload [post]
 func (h *TaskHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(10 << 20)
+	log := logger.NewLogger()
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		return
+	}
 
 	userID, err := utils.ExtractUserIDFromToken(r)
 	if err != nil {
@@ -274,8 +298,8 @@ func (h *TaskHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	formdata := r.MultipartForm
-	files := formdata.File["files"]
+	formData := r.MultipartForm
+	files := formData.File["files"]
 
 	err = h.service.UploadFilesForUser(files, userID)
 	if err != nil {
@@ -300,6 +324,8 @@ func (h *TaskHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} string "Ошибка при скачивании файла"
 // @Router /tasks/download/{fileID} [get]
 func (h *TaskHandler) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
+	log := logger.NewLogger()
+
 	vars := mux.Vars(r)
 	fileID := vars["fileID"]
 
@@ -312,7 +338,7 @@ func (h *TaskHandler) DownloadFileHandler(w http.ResponseWriter, r *http.Request
 
 	task, err := h.service.GetTaskByFileID(fileID)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			log.Warn("Файл с ID не найден: ", fileID)
 			utils.RespondJSON(w, http.StatusNotFound, "Файл не найден")
 			return

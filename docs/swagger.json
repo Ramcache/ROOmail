@@ -1,22 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Это документация API для проекта ROOmail.",
-        "title": "Документация ROOmail API",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "Поддержка API",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        },
-        "version": "1.0"
+        "contact": {}
     },
-    "host": "localhost:8080",
-    "basePath": "/",
     "paths": {
         "/login": {
             "post": {
@@ -148,7 +134,7 @@
                 }
             },
             "post": {
-                "description": "Создать новую задачу",
+                "description": "Создать новую задачу и отправить её пользователю/пользователям",
                 "consumes": [
                     "application/json"
                 ],
@@ -167,6 +153,18 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/models.Task"
+                        }
+                    },
+                    {
+                        "description": "Список ID пользователей для назначения задачи",
+                        "name": "user_ids",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
@@ -469,6 +467,9 @@
         "models.Task": {
             "type": "object",
             "properties": {
+                "assigned_at": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
