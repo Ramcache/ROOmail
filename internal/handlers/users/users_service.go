@@ -1,16 +1,17 @@
-package handle
+package users
 
 import (
 	"ROOmail/internal/models"
-	"database/sql"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/net/context"
 )
 
 type UsersService struct {
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
-func NewUsersService(db *sql.DB) *UsersService {
+func NewUsersService(db *pgxpool.Pool) *UsersService {
 	return &UsersService{db: db}
 }
 
@@ -23,7 +24,7 @@ func (s *UsersService) GetUsers(username string) ([]models.UsersList, error) {
 		args = append(args, "%"+username+"%")
 	}
 
-	rows, err := s.db.Query(query, args...)
+	rows, err := s.db.Query(context.Background(), query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}

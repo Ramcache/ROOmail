@@ -15,7 +15,7 @@ func LoadConfig() Config {
 	return Config{
 		ServerAddress: getEnv("SERVER_ADDRESS", "90.156.156.78:8080"),
 		DatabaseURL:   getEnv("DATABASE_URL", "postgres://user:password@localhost/dbname?sslmode=disable"),
-		JWTSecret:     getEnv("JWT_SECRET", "your-secret-key"),
+		JWTSecret:     getEnv("JWT_SECRET", "ItsROOmail"),
 	}
 }
 

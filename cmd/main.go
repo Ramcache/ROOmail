@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
+	"os"
 )
 
 // @title Документация ROOmail API
@@ -27,36 +28,37 @@ import (
 // @BasePath /
 func main() {
 	// Загрузка .env файла
-	err := godotenv.Load()
-	if err != nil {
-		log.Printf("Error loading .env file: %v", err)
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+		os.Exit(1)
 	}
-	// Инициализация логгера
-	logger.InitLogger()
 
-	// Пример использования
-	log := logger.GetLogger()
+	// Инициализация логгера
+	log := logger.NewZapLogger()
 	log.Info("Приложение запущено")
 
 	// Загрузка конфигурации
 	cfg := config.LoadConfig()
 
 	// Инициализация базы данных
-	database, err := db.InitDB(cfg.DatabaseURL)
-	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+	dbErr := db.InitDB()
+	if dbErr != nil {
+		log.Error("Failed to initialize database: ", dbErr)
+		os.Exit(1)
 	}
 
+	database := db.DB // Используем глобальную переменную DB из пакета db
+
 	// Инициализация маршрутизатора
-	r := router.NewRouter(database, cfg)
+	r := router.InitRouter(database, cfg)
 
 	// Пути к сертификату и ключу
-	certFile := `/ROOmail/sertificate/server.crt`
-	keyFile := `/ROOmail/sertificate/server.key`
 
 	// Запуск HTTPS-сервера
-	log.Info("Server started at https://%s", cfg.ServerAddress)
-	err = http.ListenAndServeTLS(cfg.ServerAddress, certFile, keyFile, r)
+	serverAddr := "https://localhost" + cfg.ServerAddress
+	log.Infof("Server started at %s", serverAddr)
+
+	err := http.ListenAndServeTLS(cfg.ServerAddress, os.Getenv("CERT_FILE"), os.Getenv("KEY_FILE"), r)
 	if err != nil {
 		log.Fatalf("Failed to start HTTPS server: %v", err)
 	}

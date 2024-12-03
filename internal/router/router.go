@@ -3,45 +3,37 @@ package router
 import (
 	"ROOmail/config"
 	"ROOmail/internal/handlers/auth"
-	"ROOmail/internal/handlers/handle"
+	"ROOmail/internal/handlers/file"
 	"ROOmail/internal/handlers/tasks"
-	"ROOmail/internal/middleware"
-	"database/sql"
+	"ROOmail/internal/handlers/users"
+	"ROOmail/pkg/logger"
+	"ROOmail/pkg/utils/jwt"
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"net/http"
 )
 
-func NewRouter(db *sql.DB, cfg config.Config) http.Handler {
+func InitRouter(db *pgxpool.Pool, cfg config.Config) http.Handler {
 	r := mux.NewRouter()
+	log := logger.NewZapLogger()
 
-	// Маршруты для аутентификации
-	r.HandleFunc("/login", auth.LoginHandler).Methods("POST")
-	r.HandleFunc("/logout", auth.LogoutHandler).Methods("POST")
+	// Регистрация маршрутов аутентификации
+	registerAuthRoutes(r, log)
 
-	// Маршруты для задач
-	taskService := tasks.NewTaskService(db)
-	taskHandler := tasks.NewTaskHandler(taskService)
+	// Регистрация маршрутов задач
+	registerTaskRoutes(r, db, log)
 
-	// Защищённые маршруты для задач
-	protectedRoutes := r.PathPrefix("/tasks").Subrouter()
-	protectedRoutes.Use(middleware.JWTMiddleware)
-	protectedRoutes.HandleFunc("", taskHandler.CreateTaskHandler).Methods("POST")
-	protectedRoutes.HandleFunc("", taskHandler.GetTasksHandler).Methods("GET")
-	protectedRoutes.HandleFunc("/{id}", taskHandler.GetTaskByIDHandler).Methods("GET")
-	protectedRoutes.HandleFunc("/{id}", taskHandler.UpdateTaskHandler).Methods("PUT")
-	protectedRoutes.HandleFunc("/{id}", taskHandler.DeleteTaskHandler).Methods("DELETE")
-	protectedRoutes.HandleFunc("/upload", taskHandler.UploadFileHandler).Methods("POST")
-	protectedRoutes.HandleFunc("/download/{fileID}", taskHandler.DownloadFileHandler).Methods("GET")
-	// Общедоступные маршруты
-	usersService := handle.NewUsersService(db)
-	usersHandler := handle.NewUsersHandler(usersService)
-	r.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
+	// Регистрация маршрутов пользователей
+	registerUserRoutes(r, db, log)
+
+	registerFIleRoutes(r, db, log)
 
 	// Swagger-документация
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
+	// CORS настройки
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://chechenmail.vercel.app"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -50,4 +42,42 @@ func NewRouter(db *sql.DB, cfg config.Config) http.Handler {
 	})
 
 	return corsHandler.Handler(r)
+}
+
+// Регистрация маршрутов для аутентификации
+func registerAuthRoutes(r *mux.Router, log logger.Logger) {
+	r.HandleFunc("/login", auth.LoginHandler).Methods("POST")
+	r.HandleFunc("/logout", auth.LogoutHandler).Methods("POST")
+}
+
+// Регистрация маршрутов для задач
+func registerTaskRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
+	taskService := tasks.NewTaskService(db)
+	taskHandler := tasks.NewTaskHandler(taskService, log)
+
+	protectedRouter := r.PathPrefix("/admin").Subrouter()
+	protectedRouter.Use(jwt.JWTMiddleware)
+	protectedRouter.Use(jwt.RoleMiddleware("admin"))
+	protectedRouter.HandleFunc("/create", taskHandler.CreateTaskHandler).Methods("POST") //1
+}
+
+// Регистрация маршрутов для пользователей
+func registerUserRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
+	usersService := users.NewUsersService(db)
+	usersHandler := users.NewUsersHandler(usersService, log)
+
+	userRouter := r.PathPrefix("/admin").Subrouter()
+	userRouter.Use(jwt.JWTMiddleware)
+	userRouter.Use(jwt.RoleMiddleware("admin"))
+	userRouter.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
+}
+
+func registerFIleRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
+	fileService := file.NewFileService("./uploads", db)
+	fileHandler := file.NewFileHandler(fileService, log)
+
+	fileRouter := r.PathPrefix("/admin").Subrouter()
+	fileRouter.Use(jwt.JWTMiddleware)
+	fileRouter.Use(jwt.RoleMiddleware("admin"))
+	fileRouter.HandleFunc("/upload", fileHandler.UploadFileHandler).Methods("POST")
 }

@@ -3,14 +3,15 @@ package auth
 import (
 	"ROOmail/pkg/logger"
 	"ROOmail/pkg/utils"
+	"ROOmail/pkg/utils/jwt"
 	"encoding/json"
 	"net/http"
 	"strings"
 )
 
 var (
-	authService = NewAuthService()
-	log         = logger.GetLogger()
+	authService = AuthServiceInstance()
+	log         = logger.NewZapLogger()
 )
 
 type LoginRequest struct {
@@ -24,38 +25,27 @@ type LoginResponse struct {
 	Role     string `json:"role"`
 }
 
-// LoginHandler выполняет вход пользователя
-// @Summary Вход пользователя
-// @Description Аутентификация пользователя и возвращение JWT токена
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param loginRequest body LoginRequest true "Данные для входа"
-// @Success 200 {object} LoginResponse
-// @Failure 400 {object} string "Некорректный запрос"
-// @Failure 401 {object} string "Неверное имя пользователя или пароль"
-// @Failure 500 {object} string "Ошибка при генерации токена"
-// @Router /login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context() // Используем контекст из запроса
 	var req LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error("Ошибка декодирования тела запроса: ", err)
-		utils.RespondJSON(w, http.StatusBadRequest, "Некорректный запрос")
+		utils.RespondJSON(w, http.StatusBadRequest, map[string]string{"error": "Некорректный запрос"})
 		return
 	}
 
 	log.Info("Попытка входа пользователя: ", req.Username)
-	user, err := authService.AuthenticateUser(req.Username, req.Password)
+	user, err := authService.AuthenticateUser(ctx, req.Username, req.Password)
 	if err != nil {
 		log.Warn("Неудачная попытка входа пользователя: ", req.Username)
-		utils.RespondJSON(w, http.StatusUnauthorized, "Неверное имя пользователя или пароль")
+		utils.RespondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Неверное имя пользователя или пароль"})
 		return
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
+	token, err := jwt.GenerateJWT(user.ID, user.Username, user.Role)
 	if err != nil {
 		log.Error("Ошибка генерации токена для пользователя: ", req.Username, " - ", err)
-		utils.RespondJSON(w, http.StatusInternalServerError, "Ошибка при генерации токена")
+		utils.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Ошибка при генерации токена"})
 		return
 	}
 
@@ -68,34 +58,29 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, resp)
 }
 
-// LogoutHandler выполняет выход пользователя
-// @Summary Выход пользователя
-// @Description Выход пользователя и отзыв JWT токена
-// @Tags auth
-// @Produce json
-// @Param Authorization header string true "Bearer токен"
-// @Success 303 "Перенаправление на страницу входа"
-// @Failure 401 {object} string "Требуется заголовок авторизации"
-// @Failure 401 {object} string "Некорректный формат заголовка авторизации"
-// @Router /logout [get]
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context() // Используем контекст из запроса
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		log.Warn("Попытка выхода без заголовка авторизации")
-		utils.RespondJSON(w, http.StatusUnauthorized, "Требуется заголовок авторизации")
+		utils.RespondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Требуется заголовок авторизации"})
 		return
 	}
 
 	parts := strings.Split(authHeader, " ")
 	if len(parts) != 2 || parts[0] != "Bearer" {
 		log.Warn("Некорректный формат заголовка авторизации: ", authHeader)
-		utils.RespondJSON(w, http.StatusUnauthorized, "Некорректный формат заголовка авторизации")
+		utils.RespondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Некорректный формат заголовка авторизации"})
 		return
 	}
 
 	token := parts[1]
-	authService.RevokeToken(token)
-	log.Info("Пользователь вышел, токен отозван: ", token)
+	if err := authService.RevokeToken(ctx, token); err != nil {
+		log.Error("Ошибка отзыва токена: ", token, " - ", err)
+		utils.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Ошибка при отзыве токена"})
+		return
+	}
 
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	log.Info("Пользователь вышел, токен отозван: ", token)
+	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Выход выполнен успешно"})
 }

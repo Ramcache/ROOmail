@@ -6,9 +6,8 @@ import (
 	"net/http"
 )
 
-var log = logger.GetLogger()
-
 func RespondJSON(w http.ResponseWriter, status int, payload interface{}) {
+	log := logger.NewZapLogger()
 	response, err := json.Marshal(payload)
 	if err != nil {
 		log.Error("Ошибка маршализации JSON ответа: ", err)

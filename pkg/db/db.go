@@ -1,41 +1,42 @@
 package db
 
 import (
-	"database/sql"
+	"ROOmail/internal/models"
 	"fmt"
 	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/net/context"
 	"log"
+	"os"
 )
 
-var DB *sql.DB
+var DB *pgxpool.Pool
 
-func InitDB(databaseURL string) (*sql.DB, error) {
-	db, err := sql.Open("pgx", databaseURL)
-	if err != nil {
-		return nil, err
+func InitDB() error {
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		return fmt.Errorf("DATABASE_URL is not set in environment variables")
 	}
 
-	err = db.Ping()
+	var err error
+	DB, err = pgxpool.New(context.Background(), dbURL)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to create connection pool: %w", err)
 	}
-
-	log.Println("Successfully connected to the database")
-	DB = db
-	return db, nil
+	log.Println("Database connection established")
+	return nil
 }
 
-type User struct {
-	ID           int
-	Username     string
-	PasswordHash string
-	Role         string
+func CloseDB() {
+	if DB != nil {
+		DB.Close()
+	}
 }
 
-func GetUserByUsername(username string) (*User, error) {
-	user := &User{}
+func GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	user := &models.User{}
 	query := "SELECT id, username, password_hash, role FROM users WHERE username=$1"
-	err := DB.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.PasswordHash, &user.Role)
+	err := DB.QueryRow(ctx, query, username).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %v", err)
 	}
