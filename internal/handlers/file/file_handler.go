@@ -3,7 +3,12 @@ package file
 import (
 	"ROOmail/pkg/logger"
 	"fmt"
+	"github.com/gorilla/mux"
+	"io"
+	"mime"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 type FileHandler struct {
@@ -27,7 +32,7 @@ func NewFileHandler(service *FileService, log logger.Logger) *FileHandler {
 // @Success 200 {object} map[string]string "{"file_path": "uploaded/file/path"}"
 // @Failure 400 {string} string "Ошибка разбора формы"
 // @Failure 500 {string} string "Ошибка чтения файла или сохранения файла"
-// @Router /admin/file/upload [post]
+// @Router /users/files/upload [post]
 func (h *FileHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("Запрос на загрузку файла")
 
@@ -56,4 +61,51 @@ func (h *FileHandler) UploadFileHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`{"file_path": "%s"}`, filePath)))
+}
+
+// DownloadFileHandler обрабатывает запрос на скачивание файла с сервера.
+// @Summary Скачать файл
+// @Description Позволяет скачать файл, загруженный на сервер по его имени.
+// @Tags файлы
+// @Param filename path string true "Имя файла для скачивания"
+// @Produce octet-stream
+// @Success 200 {file} file "Файл для скачивания"
+// @Failure 404 {object} string "Файл не найден"
+// @Failure 500 {object} string "Ошибка сервера"
+// @Router /admin/files/{filename} [get]
+func (h *FileHandler) DownloadFileHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("Запрос на скачивание файла")
+
+	vars := mux.Vars(r)
+	filename := vars["filename"]
+
+	filePath, err := h.service.GetFilePath(filename)
+	if err != nil {
+		h.log.Error("Файл не найден", err)
+		http.Error(w, "Файл не найден", http.StatusNotFound)
+		return
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		h.log.Error("Не удалось открыть файл", err)
+		http.Error(w, "Не удалось открыть файл", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	ext := filepath.Ext(filename)
+	mimeType := mime.TypeByExtension(ext)
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+	h.log.Info(fmt.Sprintf("Определённый MIME-тип для файла %s: %s", filename, mimeType))
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	w.Header().Set("Content-Type", mimeType)
+
+	if _, err := io.Copy(w, file); err != nil {
+		h.log.Error("Ошибка при отправке файла", err)
+		http.Error(w, "Ошибка при отправке файла", http.StatusInternalServerError)
+	}
 }

@@ -21,6 +21,17 @@ definitions:
           type: integer
         type: array
     type: object
+  ROOmail_internal_models.User:
+    properties:
+      id:
+        type: integer
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
   ROOmail_internal_models.UsersList:
     properties:
       id:
@@ -58,35 +69,31 @@ info:
   title: Документация ROOmail API
   version: "1.0"
 paths:
-  /admin/file/upload:
-    post:
-      consumes:
-      - multipart/form-data
-      description: Загрузка файла на сервер
+  /admin/files/{filename}:
+    get:
+      description: Позволяет скачать файл, загруженный на сервер по его имени.
       parameters:
-      - description: Файл для загрузки
-        in: formData
-        name: file
+      - description: Имя файла для скачивания
+        in: path
+        name: filename
         required: true
-        type: file
+        type: string
       produces:
-      - application/json
+      - application/octet-stream
       responses:
         "200":
-          description: '{"file_path": "uploaded/file/path"}'
+          description: Файл для скачивания
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Ошибка разбора формы
+            type: file
+        "404":
+          description: Файл не найден
           schema:
             type: string
         "500":
-          description: Ошибка чтения файла или сохранения файла
+          description: Ошибка сервера
           schema:
             type: string
-      summary: Загрузка файла
+      summary: Скачать файл
       tags:
       - файлы
   /admin/logs/{filename}:
@@ -295,6 +302,65 @@ paths:
       summary: Обновить задачу
       tags:
       - Задачи
+  /admin/users/add:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет нового пользователя в базу данных с заданными именем,
+        паролем и ролью.
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/ROOmail_internal_models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Сообщение об успешном добавлении и ID нового пользователя
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Некорректные данные
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Добавить нового пользователя
+      tags:
+      - users
+  /admin/users/delete/{id}:
+    delete:
+      description: Удаляет пользователя из базы данных по его идентификатору (ID).
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Пользователь успешно удалён
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "404":
+          description: Пользователь не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Удалить пользователя
+      tags:
+      - users
   /admin/users_list:
     get:
       consumes:
@@ -438,4 +504,35 @@ paths:
       summary: Получить все задачи пользователя
       tags:
       - Задачи
+  /users/files/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загрузка файла на сервер
+      parameters:
+      - description: Файл для загрузки
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"file_path": "uploaded/file/path"}'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Ошибка разбора формы
+          schema:
+            type: string
+        "500":
+          description: Ошибка чтения файла или сохранения файла
+          schema:
+            type: string
+      summary: Загрузка файла
+      tags:
+      - файлы
 swagger: "2.0"

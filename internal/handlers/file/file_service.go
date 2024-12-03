@@ -43,3 +43,13 @@ func (s *FileService) SaveFile(file io.Reader, filename string) (string, error) 
 
 	return filePath, nil
 }
+
+func (s *FileService) GetFilePath(filename string) (string, error) {
+	filePath := filepath.Join(s.uploadDir, filename)
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("Файл не найден: %s", filename)
+	}
+
+	return filePath, nil
+}

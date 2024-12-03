@@ -375,3 +375,32 @@
 2024-12-03T20:49:20.542+0300	INFO	logger/logger.go:91	Пользователь успешно удалён userID: 84
 2024-12-03T20:49:34.336+0300	INFO	logger/logger.go:91	Получен запрос на удаление пользователя
 2024-12-03T20:49:34.344+0300	INFO	logger/logger.go:91	Пользователь успешно удалён userID: 82
+2024-12-03T20:50:51.468+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:50:51.482+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:00:36.189+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:00:36.204+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:00:52.410+0300	INFO	logger/logger.go:91	Попытка входа пользователя: roo_inform
+2024-12-03T21:00:52.585+0300	INFO	logger/logger.go:91	Успешный вход пользователя: roo_inform
+2024-12-03T21:01:34.247+0300	INFO	logger/logger.go:91	Запрос на загрузку файла
+2024-12-03T21:01:34.252+0300	INFO	logger/logger.go:91	Файл успешно загружен: uploads\1733248894.jpeg
+2024-12-03T21:02:19.124+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:02:19.152+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:03:39.442+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:03:39.451+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:03:44.899+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:03:44.900+0300	ERROR	logger/logger.go:99	Файл не найденФайл не найден: 1733248894
+2024-12-03T21:03:55.012+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:04:50.847+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:06:00.774+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:06:05.123+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:06:08.146+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:06:13.384+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:07:24.048+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:07:24.059+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:07:27.514+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:08:08.821+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:08:08.835+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:09:41.170+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:09:41.177+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:09:43.898+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:09:44.077+0300	INFO	logger/logger.go:91	Определённый MIME-тип для файла 1733248894.jpeg: image/jpeg

@@ -24,46 +24,40 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/file/upload": {
-            "post": {
-                "description": "Загрузка файла на сервер",
-                "consumes": [
-                    "multipart/form-data"
-                ],
+        "/admin/files/{filename}": {
+            "get": {
+                "description": "Позволяет скачать файл, загруженный на сервер по его имени.",
                 "produces": [
-                    "application/json"
+                    "application/octet-stream"
                 ],
                 "tags": [
                     "файлы"
                 ],
-                "summary": "Загрузка файла",
+                "summary": "Скачать файл",
                 "parameters": [
                     {
-                        "type": "file",
-                        "description": "Файл для загрузки",
-                        "name": "file",
-                        "in": "formData",
+                        "type": "string",
+                        "description": "Имя файла для скачивания",
+                        "name": "filename",
+                        "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"file_path\": \"uploaded/file/path\"}",
+                        "description": "Файл для скачивания",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "file"
                         }
                     },
-                    "400": {
-                        "description": "Ошибка разбора формы",
+                    "404": {
+                        "description": "Файл не найден",
                         "schema": {
                             "type": "string"
                         }
                     },
                     "500": {
-                        "description": "Ошибка чтения файла или сохранения файла",
+                        "description": "Ошибка сервера",
                         "schema": {
                             "type": "string"
                         }
@@ -381,6 +375,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/users/add": {
+            "post": {
+                "description": "Добавляет нового пользователя в базу данных с заданными именем, паролем и ролью.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Добавить нового пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные пользователя",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ROOmail_internal_models.User"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Сообщение об успешном добавлении и ID нового пользователя",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректные данные",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/delete/{id}": {
+            "delete": {
+                "description": "Удаляет пользователя из базы данных по его идентификатору (ID).",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Удалить пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID пользователя",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Пользователь успешно удалён"
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/users_list": {
             "get": {
                 "description": "Возвращает список пользователей с возможностью фильтрации по имени пользователя.",
@@ -596,6 +678,53 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users/files/upload": {
+            "post": {
+                "description": "Загрузка файла на сервер",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "файлы"
+                ],
+                "summary": "Загрузка файла",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Файл для загрузки",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"file_path\": \"uploaded/file/path\"}",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка разбора формы",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка чтения файла или сохранения файла",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -628,6 +757,23 @@ const docTemplate = `{
                     "items": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "ROOmail_internal_models.User": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },

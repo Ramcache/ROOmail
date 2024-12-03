@@ -95,8 +95,9 @@ func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	h.log.Info("Пользователь успешно удалён ", "userID: ", userID)
 
-	w.WriteHeader(http.StatusNoContent)
-	w.Write([]byte(fmt.Sprintf(`{"Пользователь успешно удален ", "user_id": %d}`, userID)))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"message": "Пользователь успешно удалён", "user_id": %d}`, userID)))
 }
 
 // UsersSelectHandler

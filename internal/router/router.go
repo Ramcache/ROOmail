@@ -98,5 +98,10 @@ func registerFIleRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	fileRouter := r.PathPrefix("/admin").Subrouter()
 	fileRouter.Use(jwt_token.JWTMiddleware)
 	fileRouter.Use(jwt_token.RoleMiddleware("admin"))
-	fileRouter.HandleFunc("/file/upload", fileHandler.UploadFileHandler).Methods("POST")
+	fileRouter.HandleFunc("/files/upload", fileHandler.UploadFileHandler).Methods("POST")
+
+	userFilesRouter := r.PathPrefix("/users").Subrouter()
+	userFilesRouter.Use(jwt_token.JWTMiddleware)
+	userFilesRouter.HandleFunc("/files/{filename}", fileHandler.DownloadFileHandler).Methods("GET")
+
 }
