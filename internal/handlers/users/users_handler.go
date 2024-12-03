@@ -97,7 +97,64 @@ func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{"message": "Пользователь успешно удалён", "user_id": %d}`, userID)))
+	w.Write([]byte(fmt.Sprintf(`{"message": "Пользователь успешно удалён ", "user_id": %d}`, userID)))
+}
+
+// UpdateUserHandler обрабатывает запрос на обновление данных пользователя.
+// @Summary Обновить пользователя
+// @Description Обновляет данные пользователя, такие как имя пользователя, пароль и роль.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param id path int true "ID пользователя для обновления"
+// @Param user body models.User true "Данные пользователя для обновления"
+// @Success 200 {object} string "Пользователь успешно обновлён"
+// @Failure 400 {object} string "Некорректные данные"
+// @Failure 404 {object} string "Пользователь не найден"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /users/{id} [patch]
+func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("Запрос на обновление данных пользователя")
+
+	vars := mux.Vars(r)
+	userIDStr := vars["id"]
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		h.log.Error("Некорректный идентификатор пользователя", err)
+		http.Error(w, "Некорректный запрос: некорректный идентификатор пользователя", http.StatusBadRequest)
+		return
+	}
+
+	var req models.User
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.log.Error("Некорректный JSON при обновлении пользователя", err)
+		http.Error(w, "Некорректные данные", http.StatusBadRequest)
+		return
+	}
+
+	var username, password, role *string
+	if req.Username != "" {
+		username = &req.Username
+	}
+	if req.Password != "" {
+		password = &req.Password
+	}
+	if req.Role != "" {
+		role = &req.Role
+	}
+
+	err = h.service.UpdateUser(r.Context(), userID, username, password, role)
+	if err != nil {
+		h.log.Error("Не удалось обновить пользователя", err)
+		http.Error(w, "Не удалось обновить пользователя", http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Info("Пользователь успешно обновлён ", "userID: ", userID)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fmt.Sprintf(`{"message": "Пользователь успешно обновлён ", "user_id": %d}`, userID)))
 }
 
 // UsersSelectHandler

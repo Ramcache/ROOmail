@@ -43,6 +43,45 @@ func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
 	return nil
 }
 
+func (s *UserService) UpdateUser(ctx context.Context, userID int, username, password, role *string) error {
+	query := `UPDATE users SET `
+	params := []interface{}{}
+	paramIndex := 1
+
+	if username != nil {
+		query += fmt.Sprintf("username = $%d, ", paramIndex)
+		params = append(params, *username)
+		paramIndex++
+	}
+
+	if password != nil {
+		hashedPassword, err := utils.HashPassword(*password)
+		if err != nil {
+			return fmt.Errorf("Не удалось хешировать пароль: %w", err)
+		}
+		query += fmt.Sprintf("password_hash = $%d, ", paramIndex)
+		params = append(params, hashedPassword)
+		paramIndex++
+	}
+
+	if role != nil {
+		query += fmt.Sprintf("role = $%d, ", paramIndex)
+		params = append(params, *role)
+		paramIndex++
+	}
+
+	query = query[:len(query)-2]
+	query += fmt.Sprintf(" WHERE id = $%d", paramIndex)
+	params = append(params, userID)
+
+	_, err := s.db.Exec(ctx, query, params...)
+	if err != nil {
+		return fmt.Errorf("Не удалось обновить пользователя с ID %d: %w", userID, err)
+	}
+
+	return nil
+}
+
 func (s *UserService) GetUsers(username string) ([]models.UsersList, error) {
 	query := "SELECT id, username FROM users"
 	var args []interface{}

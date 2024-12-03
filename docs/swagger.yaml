@@ -504,6 +504,46 @@ paths:
       summary: Получить все задачи пользователя
       tags:
       - Задачи
+  /users/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Обновляет данные пользователя, такие как имя пользователя, пароль
+        и роль.
+      parameters:
+      - description: ID пользователя для обновления
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные пользователя для обновления
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/ROOmail_internal_models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно обновлён
+          schema:
+            type: string
+        "400":
+          description: Некорректные данные
+          schema:
+            type: string
+        "404":
+          description: Пользователь не найден
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Обновить пользователя
+      tags:
+      - users
   /users/files/upload:
     post:
       consumes:
