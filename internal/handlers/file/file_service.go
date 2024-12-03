@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 )
 
+type FileInterface interface {
+	SaveFile(file io.Reader, filename string) (string, error)
+}
+
 type FileService struct {
 	uploadDir string
 	db        *pgxpool.Pool

@@ -4,11 +4,19 @@ import (
 	"ROOmail/internal/models"
 	"ROOmail/pkg/db"
 	"ROOmail/pkg/utils"
+	"ROOmail/pkg/utils/JWT"
 	"context"
 	"fmt"
 	"sync"
 	"time"
 )
+
+type AuthInterface interface {
+	AuthenticateUser(ctx context.Context, username, password string) (*models.User, error)
+	IsTokenRevoked(token string) bool
+	CleanupRevokedTokens()
+	RevokeToken(ctx context.Context, token string) error
+}
 
 type AuthService struct {
 	blacklist sync.Map
@@ -52,7 +60,24 @@ func (s *AuthService) IsTokenRevoked(token string) bool {
 	return revoked
 }
 
-// Функция для очистки устаревших токенов (опционально)
 func (s *AuthService) CleanupRevokedTokens() {
-	// Здесь можно реализовать очистку старых токенов, если они имеют срок действия
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	for {
+		<-ticker.C
+
+		s.blacklist.Range(func(key, value interface{}) bool {
+			token, ok := key.(string)
+			if !ok {
+				return true
+			}
+
+			if JWT.IsTokenExpired(token) {
+				s.blacklist.Delete(token)
+			}
+
+			return true
+		})
+	}
 }

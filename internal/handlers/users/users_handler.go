@@ -1,9 +1,10 @@
 package users
 
 import (
+	_ "ROOmail/internal/models"
 	"ROOmail/pkg/logger"
 	"ROOmail/pkg/utils"
-	"ROOmail/pkg/utils/jwt"
+	"ROOmail/pkg/utils/JWT"
 	"net/http"
 )
 
@@ -21,15 +22,16 @@ func NewUsersHandler(service *UsersService, log logger.Logger) *UsersHandler {
 // UsersSelectHandler
 // @Summary      Получить список пользователей
 // @Description  Возвращает список пользователей с возможностью фильтрации по имени пользователя.
-// @Tags         Users
+// @Tags         users
 // @Accept       json
 // @Produce      json
 // @Param        username query string false "Фильтр по имени пользователя (поддерживает подстроку)"
 // @Success      200 {array} models.UsersList
-// @Failure      500 {object} map[string]string
-// @Router       /users_list [get]
+// @Failure      401 {object} map[string]string "Ошибка авторизации"
+// @Failure      500 {object} map[string]string "Ошибка получения пользователей"
+// @Router       /admin/users_list [get]
 func (h *UsersHandler) UsersSelectHandler(w http.ResponseWriter, r *http.Request) {
-	userClaims, ok := r.Context().Value("user").(*jwt.Claims)
+	userClaims, ok := r.Context().Value("user").(*JWT.Claims)
 	if !ok {
 		h.log.Error("Не удалось извлечь информацию о пользователе из контекста")
 		http.Error(w, "Ошибка авторизации", http.StatusUnauthorized)

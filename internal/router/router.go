@@ -7,7 +7,7 @@ import (
 	"ROOmail/internal/handlers/tasks"
 	"ROOmail/internal/handlers/users"
 	"ROOmail/pkg/logger"
-	"ROOmail/pkg/utils/jwt"
+	"ROOmail/pkg/utils/JWT"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/cors"
@@ -46,8 +46,8 @@ func InitRouter(db *pgxpool.Pool, cfg config.Config) http.Handler {
 
 // Регистрация маршрутов для аутентификации
 func registerAuthRoutes(r *mux.Router, log logger.Logger) {
-	r.HandleFunc("/login", auth.LoginHandler).Methods("POST")
-	r.HandleFunc("/logout", auth.LogoutHandler).Methods("POST")
+	r.HandleFunc("/auth/login", auth.LoginHandler).Methods("POST")
+	r.HandleFunc("/auth/logout", auth.LogoutHandler).Methods("POST")
 }
 
 // Регистрация маршрутов для задач
@@ -56,9 +56,9 @@ func registerTaskRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	taskHandler := tasks.NewTaskHandler(taskService, log)
 
 	protectedRouter := r.PathPrefix("/admin").Subrouter()
-	protectedRouter.Use(jwt.JWTMiddleware)
-	protectedRouter.Use(jwt.RoleMiddleware("admin"))
-	protectedRouter.HandleFunc("/create", taskHandler.CreateTaskHandler).Methods("POST") //1
+	protectedRouter.Use(JWT.JWTMiddleware)
+	protectedRouter.Use(JWT.RoleMiddleware("admin"))
+	protectedRouter.HandleFunc("/tasks/create", taskHandler.CreateTaskHandler).Methods("POST") //1
 }
 
 // Регистрация маршрутов для пользователей
@@ -67,8 +67,8 @@ func registerUserRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	usersHandler := users.NewUsersHandler(usersService, log)
 
 	userRouter := r.PathPrefix("/admin").Subrouter()
-	userRouter.Use(jwt.JWTMiddleware)
-	userRouter.Use(jwt.RoleMiddleware("admin"))
+	userRouter.Use(JWT.JWTMiddleware)
+	userRouter.Use(JWT.RoleMiddleware("admin"))
 	userRouter.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
 }
 
@@ -77,7 +77,7 @@ func registerFIleRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	fileHandler := file.NewFileHandler(fileService, log)
 
 	fileRouter := r.PathPrefix("/admin").Subrouter()
-	fileRouter.Use(jwt.JWTMiddleware)
-	fileRouter.Use(jwt.RoleMiddleware("admin"))
-	fileRouter.HandleFunc("/upload", fileHandler.UploadFileHandler).Methods("POST")
+	fileRouter.Use(JWT.JWTMiddleware)
+	fileRouter.Use(JWT.RoleMiddleware("admin"))
+	fileRouter.HandleFunc("/file/upload", fileHandler.UploadFileHandler).Methods("POST")
 }

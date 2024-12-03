@@ -1,4 +1,4 @@
-package jwt
+package JWT
 
 import (
 	"github.com/golang-jwt/jwt/v5"
