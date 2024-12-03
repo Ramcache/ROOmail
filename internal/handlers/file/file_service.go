@@ -1,10 +1,12 @@
 package file
 
 import (
+	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type FileInterface interface {
@@ -24,7 +26,10 @@ func NewFileService(uploadDir string, db *pgxpool.Pool) *FileService {
 }
 
 func (s *FileService) SaveFile(file io.Reader, filename string) (string, error) {
-	filePath := filepath.Join(s.uploadDir, filename)
+	ext := filepath.Ext(filename)
+	timestamp := time.Now().Unix()
+	newFilename := fmt.Sprintf("%d%s", timestamp, ext)
+	filePath := filepath.Join(s.uploadDir, newFilename)
 
 	dst, err := os.Create(filePath)
 	if err != nil {

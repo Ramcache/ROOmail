@@ -1,0 +1,6 @@
+2024-12-03T13:05:56.812+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T13:05:56.824+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T13:06:07.054+0300	INFO	logger/logger.go:91	Попытка входа пользователя: roo_inform
+2024-12-03T13:06:07.324+0300	INFO	logger/logger.go:91	Успешный вход пользователя: roo_inform
+2024-12-03T13:06:15.269+0300	INFO	logger/logger.go:91	Запрос на загрузку файла
+2024-12-03T13:06:15.277+0300	INFO	logger/logger.go:91	Файл успешно загружен: uploads\1733220375.jpeg
