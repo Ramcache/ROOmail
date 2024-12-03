@@ -25,7 +25,7 @@ func NewTaskHandler(service *TaskService, log logger.Logger) *TaskHandler {
 // CreateTaskHandler создает новую задачу
 // @Summary Создание новой задачи
 // @Description Создает новую задачу с указанными данными
-// @Tags задачи
+// @Tags Задачи
 // @Accept json
 // @Produce json
 // @Param task body models.Task true "Данные задачи"
@@ -65,6 +65,45 @@ func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"message": "Задача успешно создана", "task_id": "%s"}`, taskID)))
+}
+
+// GetTasksHandler handles the request to get all tasks assigned to a specific user.
+// @Summary Get all tasks for a user
+// @Description Retrieves a list of tasks assigned to the authenticated user.
+// @Tags tasks
+// @Accept  json
+// @Produce  json
+// @Param   Authorization header string true "Bearer Token"
+// @Success 200 {array} models.Task "List of tasks assigned to the user"
+// @Failure 400 {object} string "Bad Request"
+// @Failure 401 {object} string "Unauthorized"
+// @Failure 500 {object} string "Internal Server Error"
+// @Router /tasks [get]
+func (h *TaskHandler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("Получен запрос на получение задач пользователя")
+
+	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
+	if !ok {
+		h.log.Error("Попытка неавторизованного доступа")
+		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
+		return
+	}
+
+	userID := userClaims.UserID
+	h.log.Info("Получение задач для пользователя", "userID: ", userID)
+
+	tasks, err := h.service.GetTasks(r.Context(), userID)
+	if err != nil {
+		h.log.Error("Не удалось получить задачи", err)
+		http.Error(w, "Не удалось получить задачи", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(tasks); err != nil {
+		h.log.Error("Ошибка кодирования задач в JSON", err)
+		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
+	}
 }
 
 // UpdateTaskHandler обновляет информацию о существующей задаче.

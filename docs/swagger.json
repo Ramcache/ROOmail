@@ -65,6 +65,94 @@
                 }
             }
         },
+        "/admin/logs/list": {
+            "get": {
+                "description": "Возвращает список файлов, находящихся в директории логов.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "logs"
+                ],
+                "summary": "Получить список файлов логов",
+                "responses": {
+                    "200": {
+                        "description": "Список имен файлов логов",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка при чтении директории",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/logs/{filename}": {
+            "get": {
+                "description": "Возвращает содержимое указанного файла логов из директории.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "logs"
+                ],
+                "summary": "Получить содержимое файла логов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Имя файла лога",
+                        "name": "filename",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Содержимое файла логов",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Имя файла не указано или некорректно",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Файл не найден",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка при чтении файла логов",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/tasks/create": {
             "post": {
                 "description": "Создает новую задачу с указанными данными",
@@ -75,7 +163,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "задачи"
+                    "Задачи"
                 ],
                 "summary": "Создание новой задачи",
                 "parameters": [

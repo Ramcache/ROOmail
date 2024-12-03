@@ -260,3 +260,88 @@
 2024-12-03T15:34:27.652+0300	INFO	logger/logger.go:91	Получен запрос на удаление задачи
 2024-12-03T15:34:27.652+0300	INFO	logger/logger.go:91	Удаление задачи taskID: 24 выполняется пользователем: 57
 2024-12-03T15:34:27.746+0300	INFO	logger/logger.go:91	Задача успешно удалена taskID: 24
+2024-12-03T16:48:07.805+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:48:07.817+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T16:49:08.537+0300	INFO	logger/logger.go:91	Попытка входа пользователя: roo_inform
+2024-12-03T16:49:08.905+0300	INFO	logger/logger.go:91	Успешный вход пользователя: roo_inform
+2024-12-03T16:49:44.372+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:49:44.386+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T16:49:55.426+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:49:55.437+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T16:50:31.778+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:50:31.787+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T16:51:11.259+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:51:11.271+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T16:52:38.180+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:52:38.195+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T16:54:24.412+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:54:24.424+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T16:56:41.379+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T16:56:41.391+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:02:10.272+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:02:10.284+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:02:19.348+0300	INFO	logger/logger.go:91	Попытка входа пользователя: roo_inform
+2024-12-03T17:02:19.610+0300	INFO	logger/logger.go:91	Успешный вход пользователя: roo_inform
+2024-12-03T17:02:44.502+0300	INFO	logger/logger.go:91	Получен запрос на создание новой задачи
+2024-12-03T17:02:44.503+0300	INFO	logger/logger.go:91	Создание задачи создано пользователем: 57
+2024-12-03T17:02:44.519+0300	INFO	logger/logger.go:91	Задача успешно создана taskID: 25
+2024-12-03T17:03:34.054+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:03:34.065+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:04:22.245+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:04:22.246+0300	INFO	logger/logger.go:91	Получение задач для пользователя userID: 57
+2024-12-03T17:06:45.036+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:06:45.048+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:06:47.996+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:06:47.997+0300	INFO	logger/logger.go:91	Получение задач для пользователя userID: 57
+2024-12-03T17:10:08.885+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:10:08.893+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:10:12.361+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:10:12.362+0300	INFO	logger/logger.go:91	Получение задач для пользователя userID: 57
+2024-12-03T17:11:39.322+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:11:39.332+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:12:14.599+0300	INFO	logger/logger.go:91	Попытка входа пользователя: novysharoy2
+2024-12-03T17:12:14.792+0300	INFO	logger/logger.go:91	Успешный вход пользователя: novysharoy2
+2024-12-03T17:13:03.120+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:13:03.132+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:13:18.366+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:13:18.377+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:13:20.672+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:13:20.673+0300	INFO	logger/logger.go:91	Получение задач для пользователя userID: 51
+2024-12-03T17:28:06.929+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:28:06.942+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:28:20.272+0300	INFO	logger/logger.go:91	Попытка входа пользователя: roo_inform
+2024-12-03T17:28:20.519+0300	INFO	logger/logger.go:91	Успешный вход пользователя: roo_inform
+2024-12-03T17:28:29.454+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:28:29.454+0300	INFO	logger/logger.go:91	Получение задач для пользователя userID: 57
+2024-12-03T17:29:07.167+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:29:07.179+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:29:09.462+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:29:09.462+0300	INFO	logger/logger.go:91	Получение задач для пользователя userID: 57
+2024-12-03T17:36:28.902+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:36:28.914+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:36:31.300+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:36:31.301+0300	INFO	logger/logger.go:91	Получение задач для пользователяuserID: 57
+2024-12-03T17:46:55.567+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:46:55.583+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:46:59.053+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:46:59.054+0300	INFO	logger/logger.go:91	Получение задач для пользователяuserID: 57
+2024-12-03T17:47:43.348+0300	INFO	logger/logger.go:91	Попытка входа пользователя: hambiirzi1
+2024-12-03T17:47:43.474+0300	INFO	logger/logger.go:91	Успешный вход пользователя: hambiirzi1
+2024-12-03T17:49:39.867+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:49:39.884+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:49:42.635+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:49:42.636+0300	INFO	logger/logger.go:91	Получение задач для пользователяuserID: 67
+2024-12-03T17:49:42.787+0300	ERROR	logger/logger.go:99	Не удалось получить задачиFailed to scan task: number of field descriptions must equal number of destinations, got 8 and 7
+2024-12-03T17:51:11.199+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:51:11.213+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:51:14.067+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:51:14.067+0300	INFO	logger/logger.go:91	Получение задач для пользователяuserID: 67
+2024-12-03T17:51:14.172+0300	ERROR	logger/logger.go:99	Не удалось получить задачиFailed to scan task: can't scan into dest[3]: cannot scan date (OID 1082) in binary format into *string
+2024-12-03T17:54:26.775+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:54:26.785+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:54:29.771+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:54:29.772+0300	INFO	logger/logger.go:91	Получение задач для пользователяuserID: 67
+2024-12-03T17:55:49.518+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T17:55:49.527+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T17:55:50.422+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
+2024-12-03T17:55:50.422+0300	INFO	logger/logger.go:91	Получение задач для пользователяuserID: 67

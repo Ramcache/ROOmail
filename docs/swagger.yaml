@@ -86,6 +86,64 @@ paths:
       summary: Загрузка файла
       tags:
       - файлы
+  /admin/logs/{filename}:
+    get:
+      description: Возвращает содержимое указанного файла логов из директории.
+      parameters:
+      - description: Имя файла лога
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Содержимое файла логов
+          schema:
+            type: string
+        "400":
+          description: Имя файла не указано или некорректно
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Файл не найден
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Ошибка при чтении файла логов
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить содержимое файла логов
+      tags:
+      - logs
+  /admin/logs/list:
+    get:
+      description: Возвращает список файлов, находящихся в директории логов.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список имен файлов логов
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Ошибка при чтении директории
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить список файлов логов
+      tags:
+      - logs
   /admin/tasks/create:
     post:
       consumes:
@@ -120,7 +178,7 @@ paths:
             type: string
       summary: Создание новой задачи
       tags:
-      - задачи
+      - Задачи
   /admin/tasks/delete/{id}:
     delete:
       consumes:

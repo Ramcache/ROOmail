@@ -1,7 +1,9 @@
 package tasks
 
 import (
+	"ROOmail/internal/models"
 	"ROOmail/pkg/utils/jwt_token"
+	"database/sql"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/net/context"
@@ -12,6 +14,7 @@ import (
 type TaskInterface interface {
 	CreateTask(ctx context.Context, title, description, dueDateStr, priority string, userIDs []int, filePath string, createdBy int) (string, error)
 	UpdateTask(ctx context.Context, taskID int, title, description, dueDateStr, priority string, userIDs []int) error
+	GetTasks(ctx context.Context, userID int) ([]models.Task, error)
 	PatchTask(ctx context.Context, taskID int, updates map[string]interface{}) error
 	DeleteTask(ctx context.Context, taskID int) error
 }
@@ -53,6 +56,63 @@ func (s *TaskService) CreateTask(ctx context.Context, title, description, dueDat
 	}
 
 	return strconv.Itoa(taskID), nil
+}
+
+func (s *TaskService) GetTasks(ctx context.Context, userID int) ([]models.Task, error) {
+	fmt.Printf("Retrieving tasks for userID: %d\n", userID)
+
+	query := `
+		SELECT t.id, t.title, t.description, t.due_date, t.priority, t.file_path, t.created_by
+		FROM tasks t
+		JOIN tasks_users tu ON t.id = tu.task_id
+		WHERE tu.user_id = $1
+		ORDER BY t.due_date ASC
+	`
+
+	rows, err := s.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve tasks for user %d: %w", userID, err)
+	}
+	defer rows.Close()
+
+	var tasks []models.Task
+	for rows.Next() {
+		var task models.Task
+		var dueDate sql.NullTime
+
+		if err := rows.Scan(&task.ID, &task.Title, &task.Description, &dueDate, &task.Priority, &task.FilePath, &task.CreatedBy); err != nil {
+			return nil, fmt.Errorf("Failed to scan task: %w", err)
+		}
+
+		if dueDate.Valid {
+			task.DueDate = dueDate.Time.Format("2006-01-02")
+		} else {
+			task.DueDate = ""
+		}
+
+		var userIDs []int
+		userQuery := `SELECT user_id FROM tasks_users WHERE task_id = $1`
+		userRows, err := s.db.Query(ctx, userQuery, task.ID)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to retrieve users for task %d: %w", task.ID, err)
+		}
+		defer userRows.Close()
+
+		for userRows.Next() {
+			var userID int
+			if err := userRows.Scan(&userID); err != nil {
+				return nil, fmt.Errorf("Failed to scan user_id for task %d: %w", task.ID, err)
+			}
+			userIDs = append(userIDs, userID)
+		}
+		task.UserIDs = userIDs
+
+		tasks = append(tasks, task)
+	}
+
+	fmt.Printf("Found %d tasks for userID %d\n", len(tasks), userID)
+
+	return tasks, nil
 }
 
 func (s *TaskService) UpdateTask(ctx context.Context, taskID int, title, description, dueDateStr, priority string, UserIDs []int, currentUserID int) error {
