@@ -28,7 +28,7 @@ jobs:
           username: github
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            cd /Roomail # Укажите ваш путь к проекту
+            cd /ROOmail # Укажите ваш путь к проекту
             sudo /root/scripts/dev_grant_github.sh # Скрипт для смены прав
             git pull origin main # Обновляем код из ветки dev
             sudo /root/scripts/dev_grant_admin.sh # Скрипт для возврата прав
