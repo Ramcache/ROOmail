@@ -21,12 +21,13 @@ jobs:
       - name: Install Dependencies
         run: go mod tidy
 
-      - name: Deploy to Server
+      - name: SSH to Server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST }}
-          username: github
-          key: ${{ secrets.PRIVATE_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
             cd /ROOmail # Укажите ваш путь к проекту
             sudo /root/scripts/dev_grant_github.sh # Скрипт для смены прав
