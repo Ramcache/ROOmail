@@ -1,0 +1,38 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22.2
+
+      - name: Install Dependencies
+        run: go mod tidy
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: github
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            cd /ROOmail # Укажите ваш путь к проекту
+            sudo /root/scripts/dev_grant_github.sh # Скрипт для смены прав
+            git pull origin main # Обновляем код из ветки dev
+            sudo /root/scripts/dev_grant_admin.sh # Скрипт для возврата прав
+            go build -o main ./cmd # Сборка Go-приложения
+
+      - name: Notify Success
+        run: echo "Deployment to server was successful!"
