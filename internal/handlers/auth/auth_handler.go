@@ -3,7 +3,7 @@ package auth
 import (
 	"ROOmail/pkg/logger"
 	"ROOmail/pkg/utils"
-	"ROOmail/pkg/utils/JWT"
+	"ROOmail/pkg/utils/jwt_token"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -27,7 +27,7 @@ type LoginResponse struct {
 
 // LoginHandler handles user login
 // @Summary Вход пользователя
-// @Description Аутентифицирует пользователя и возвращает JWT токен
+// @Description Аутентифицирует пользователя и возвращает jwt_token токен
 // @Tags auth
 // @Accept json
 // @Produce json
@@ -54,7 +54,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := JWT.GenerateJWT(user.ID, user.Username, user.Role)
+	token, err := jwt_token.GenerateJWT(user.ID, user.Username, user.Role)
 	if err != nil {
 		log.Error("Ошибка генерации токена для пользователя: ", req.Username, " - ", err)
 		utils.RespondJSON(w, http.StatusInternalServerError, map[string]string{"error": "Ошибка при генерации токена"})
@@ -72,7 +72,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 // LogoutHandler handles user logout
 // @Summary Выход пользователя
-// @Description Отзывает JWT токен пользователя
+// @Description Отзывает jwt_token токен пользователя
 // @Tags auth
 // @Produce json
 // @Param Authorization header string true "Bearer <token>"

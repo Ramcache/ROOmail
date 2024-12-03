@@ -178,7 +178,7 @@ const docTemplate = `{
         },
         "/auth/login": {
             "post": {
-                "description": "Аутентифицирует пользователя и возвращает JWT токен",
+                "description": "Аутентифицирует пользователя и возвращает jwt_token токен",
                 "consumes": [
                     "application/json"
                 ],
@@ -239,7 +239,7 @@ const docTemplate = `{
         },
         "/auth/logout": {
             "post": {
-                "description": "Отзывает JWT токен пользователя",
+                "description": "Отзывает jwt_token токен пользователя",
                 "produces": [
                     "application/json"
                 ],

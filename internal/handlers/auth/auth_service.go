@@ -4,7 +4,7 @@ import (
 	"ROOmail/internal/models"
 	"ROOmail/pkg/db"
 	"ROOmail/pkg/utils"
-	"ROOmail/pkg/utils/JWT"
+	"ROOmail/pkg/utils/jwt_token"
 	"context"
 	"fmt"
 	"sync"
@@ -73,7 +73,7 @@ func (s *AuthService) CleanupRevokedTokens() {
 				return true
 			}
 
-			if JWT.IsTokenExpired(token) {
+			if jwt_token.IsTokenExpired(token) {
 				s.blacklist.Delete(token)
 			}
 

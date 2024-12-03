@@ -7,7 +7,7 @@ import (
 	"ROOmail/internal/handlers/tasks"
 	"ROOmail/internal/handlers/users"
 	"ROOmail/pkg/logger"
-	"ROOmail/pkg/utils/JWT"
+	"ROOmail/pkg/utils/jwt_token"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/cors"
@@ -56,9 +56,12 @@ func registerTaskRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	taskHandler := tasks.NewTaskHandler(taskService, log)
 
 	protectedRouter := r.PathPrefix("/admin").Subrouter()
-	protectedRouter.Use(JWT.JWTMiddleware)
-	protectedRouter.Use(JWT.RoleMiddleware("admin"))
+	protectedRouter.Use(jwt_token.JWTMiddleware)
+	protectedRouter.Use(jwt_token.RoleMiddleware("admin"))
 	protectedRouter.HandleFunc("/tasks/create", taskHandler.CreateTaskHandler).Methods("POST") //1
+
+	protectedRouter.HandleFunc("/tasks/update/{id}", taskHandler.UpdateTaskHandler).Methods("PUT")
+	protectedRouter.HandleFunc("/tasks/update/{id}", taskHandler.PatchTaskHandler).Methods("PATCH")
 }
 
 // Регистрация маршрутов для пользователей
@@ -67,8 +70,8 @@ func registerUserRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	usersHandler := users.NewUsersHandler(usersService, log)
 
 	userRouter := r.PathPrefix("/admin").Subrouter()
-	userRouter.Use(JWT.JWTMiddleware)
-	userRouter.Use(JWT.RoleMiddleware("admin"))
+	userRouter.Use(jwt_token.JWTMiddleware)
+	userRouter.Use(jwt_token.RoleMiddleware("admin"))
 	userRouter.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
 }
 
@@ -77,7 +80,7 @@ func registerFIleRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	fileHandler := file.NewFileHandler(fileService, log)
 
 	fileRouter := r.PathPrefix("/admin").Subrouter()
-	fileRouter.Use(JWT.JWTMiddleware)
-	fileRouter.Use(JWT.RoleMiddleware("admin"))
+	fileRouter.Use(jwt_token.JWTMiddleware)
+	fileRouter.Use(jwt_token.RoleMiddleware("admin"))
 	fileRouter.HandleFunc("/file/upload", fileHandler.UploadFileHandler).Methods("POST")
 }

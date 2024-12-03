@@ -4,7 +4,7 @@ import (
 	_ "ROOmail/internal/models"
 	"ROOmail/pkg/logger"
 	"ROOmail/pkg/utils"
-	"ROOmail/pkg/utils/JWT"
+	"ROOmail/pkg/utils/jwt_token"
 	"net/http"
 )
 
@@ -31,7 +31,7 @@ func NewUsersHandler(service *UsersService, log logger.Logger) *UsersHandler {
 // @Failure      500 {object} map[string]string "Ошибка получения пользователей"
 // @Router       /admin/users_list [get]
 func (h *UsersHandler) UsersSelectHandler(w http.ResponseWriter, r *http.Request) {
-	userClaims, ok := r.Context().Value("user").(*JWT.Claims)
+	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
 	if !ok {
 		h.log.Error("Не удалось извлечь информацию о пользователе из контекста")
 		http.Error(w, "Ошибка авторизации", http.StatusUnauthorized)

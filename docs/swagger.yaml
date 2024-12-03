@@ -160,7 +160,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Аутентифицирует пользователя и возвращает JWT токен
+      description: Аутентифицирует пользователя и возвращает jwt_token токен
       parameters:
       - description: Имя пользователя и пароль
         in: body
@@ -198,7 +198,7 @@ paths:
       - auth
   /auth/logout:
     post:
-      description: Отзывает JWT токен пользователя
+      description: Отзывает jwt_token токен пользователя
       parameters:
       - description: Bearer <token>
         in: header
