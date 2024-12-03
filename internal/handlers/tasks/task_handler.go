@@ -67,18 +67,18 @@ func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte(fmt.Sprintf(`{"message": "Задача успешно создана", "task_id": "%s"}`, taskID)))
 }
 
-// GetTasksHandler handles the request to get all tasks assigned to a specific user.
-// @Summary Get all tasks for a user
-// @Description Retrieves a list of tasks assigned to the authenticated user.
-// @Tags tasks
+// GetTasksHandler обрабатывает запрос на получение всех задач, назначенных конкретному пользователю.
+// @Summary Получить все задачи пользователя
+// @Description Получает список задач, назначенных аутентифицированному пользователю.
+// @Tags Задачи
 // @Accept  json
 // @Produce  json
-// @Param   Authorization header string true "Bearer Token"
-// @Success 200 {array} models.Task "List of tasks assigned to the user"
-// @Failure 400 {object} string "Bad Request"
-// @Failure 401 {object} string "Unauthorized"
-// @Failure 500 {object} string "Internal Server Error"
-// @Router /tasks [get]
+// @Param   Authorization header string true "Bearer токен"
+// @Success 200 {array} models.Task "Список задач, назначенных пользователю"
+// @Failure 400 {object} string "Неверный запрос"
+// @Failure 401 {object} string "Неавторизованный доступ"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /tasks/get/{id} [get]
 func (h *TaskHandler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("Получен запрос на получение задач пользователя")
 

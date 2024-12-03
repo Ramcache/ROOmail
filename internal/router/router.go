@@ -29,8 +29,9 @@ func InitRouter(db *pgxpool.Pool, cfg config.Config) http.Handler {
 	// Регистрация маршрутов пользователей
 	registerUserRoutes(r, db, log)
 
+	// Регистрация маршрутов работы с файлами
 	registerFIleRoutes(r, db, log)
-	registerForUsers(r, db, log)
+
 	// Swagger-документация
 	r.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
@@ -50,11 +51,11 @@ func registerAuthRoutes(r *mux.Router, log logger.Logger) {
 	r.HandleFunc("/auth/login", auth.LoginHandler).Methods("POST")
 	r.HandleFunc("/auth/logout", auth.LogoutHandler).Methods("POST")
 
-	protectedRouter := r.PathPrefix("/admin").Subrouter()
-	protectedRouter.Use(jwt_token.JWTMiddleware)
-	protectedRouter.Use(jwt_token.RoleMiddleware("admin"))
-	protectedRouter.HandleFunc("/logs/list", handlers.ListLogsHandler).Methods("GET")
-	protectedRouter.HandleFunc("/logs/{filename}", handlers.LogsHandler).Methods("GET")
+	adminRouter := r.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(jwt_token.JWTMiddleware)
+	adminRouter.Use(jwt_token.RoleMiddleware("admin"))
+	adminRouter.HandleFunc("/logs/list", handlers.ListLogsHandler).Methods("GET")
+	adminRouter.HandleFunc("/logs/{filename}", handlers.LogsHandler).Methods("GET")
 }
 
 // Регистрация маршрутов для задач
@@ -62,14 +63,18 @@ func registerTaskRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	taskService := tasks.NewTaskService(db)
 	taskHandler := tasks.NewTaskHandler(taskService, log)
 
-	protectedRouter := r.PathPrefix("/admin").Subrouter()
-	protectedRouter.Use(jwt_token.JWTMiddleware)
-	protectedRouter.Use(jwt_token.RoleMiddleware("admin"))
-	protectedRouter.HandleFunc("/tasks/create", taskHandler.CreateTaskHandler).Methods("POST") //1
-	protectedRouter.HandleFunc("/tasks/update/{id}", taskHandler.UpdateTaskHandler).Methods("PUT")
-	protectedRouter.HandleFunc("/tasks/update/{id}", taskHandler.PatchTaskHandler).Methods("PATCH")
-	protectedRouter.HandleFunc("/tasks/delete/{id}", taskHandler.DeleteTaskHandler).Methods("DELETE")
+	adminRouter := r.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(jwt_token.JWTMiddleware)
+	adminRouter.Use(jwt_token.RoleMiddleware("admin"))
+	adminRouter.HandleFunc("/tasks/create", taskHandler.CreateTaskHandler).Methods("POST") //1
+	adminRouter.HandleFunc("/tasks/update/{id}", taskHandler.UpdateTaskHandler).Methods("PUT")
+	adminRouter.HandleFunc("/tasks/update/{id}", taskHandler.PatchTaskHandler).Methods("PATCH")
+	adminRouter.HandleFunc("/tasks/delete/{id}", taskHandler.DeleteTaskHandler).Methods("DELETE")
 
+	userRouter := r.PathPrefix("/user").Subrouter()
+	userRouter.Use(jwt_token.JWTMiddleware)
+	userRouter.Use(jwt_token.RoleMiddleware("users"))
+	userRouter.HandleFunc("/tasks/get/{id}", taskHandler.GetTasksHandler).Methods("GET")
 }
 
 // Регистрация маршрутов для пользователей
@@ -77,10 +82,12 @@ func registerUserRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	usersService := users.NewUsersService(db)
 	usersHandler := users.NewUsersHandler(usersService, log)
 
-	userRouter := r.PathPrefix("/admin").Subrouter()
-	userRouter.Use(jwt_token.JWTMiddleware)
-	userRouter.Use(jwt_token.RoleMiddleware("admin"))
-	userRouter.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
+	adminRouter := r.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(jwt_token.JWTMiddleware)
+	adminRouter.Use(jwt_token.RoleMiddleware("admin"))
+	adminRouter.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
+	adminRouter.HandleFunc("/users/add", usersHandler.AddUserHandler).Methods("POST")
+
 }
 
 func registerFIleRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
@@ -91,11 +98,4 @@ func registerFIleRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	fileRouter.Use(jwt_token.JWTMiddleware)
 	fileRouter.Use(jwt_token.RoleMiddleware("admin"))
 	fileRouter.HandleFunc("/file/upload", fileHandler.UploadFileHandler).Methods("POST")
-}
-func registerForUsers(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
-	taskService := tasks.NewTaskService(db)
-	taskHandler := tasks.NewTaskHandler(taskService, log)
-	getRouter := r.PathPrefix("/admin").Subrouter()
-	getRouter.Use(jwt_token.JWTMiddleware)
-	getRouter.HandleFunc("/tasks/get/{id}", taskHandler.GetTasksHandler).Methods("GET")
 }

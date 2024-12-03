@@ -2,20 +2,39 @@ package users
 
 import (
 	"ROOmail/internal/models"
+	"ROOmail/pkg/utils"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/net/context"
 )
 
-type UsersService struct {
+type UserService struct {
 	db *pgxpool.Pool
 }
 
-func NewUsersService(db *pgxpool.Pool) *UsersService {
-	return &UsersService{db: db}
+func NewUsersService(db *pgxpool.Pool) *UserService {
+	return &UserService{db: db}
 }
 
-func (s *UsersService) GetUsers(username string) ([]models.UsersList, error) {
+func (s *UserService) AddUser(ctx context.Context, username, password, role string) (int, error) {
+	// Хешируем пароль перед сохранением в базу
+	passwordHash, err := utils.HashPassword(password)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to hash password: %w", err)
+	}
+
+	// SQL-запрос для добавления пользователя
+	query := `INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id`
+	var userID int
+	err = s.db.QueryRow(ctx, query, username, passwordHash, role).Scan(&userID)
+	if err != nil {
+		return 0, fmt.Errorf("Failed to add user to the database: %w", err)
+	}
+
+	return userID, nil
+}
+
+func (s *UserService) GetUsers(username string) ([]models.UsersList, error) {
 	query := "SELECT id, username FROM users"
 	var args []interface{}
 

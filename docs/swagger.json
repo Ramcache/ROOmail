@@ -537,12 +537,68 @@
                     }
                 }
             }
+        },
+        "/tasks/get/{id}": {
+            "get": {
+                "description": "Получает список задач, назначенных аутентифицированному пользователю.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Задачи"
+                ],
+                "summary": "Получить все задачи пользователя",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer токен",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список задач, назначенных пользователю",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ROOmail_internal_models.Task"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
         "ROOmail_internal_models.Task": {
             "type": "object",
             "properties": {
+                "created_by": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
@@ -550,8 +606,10 @@
                     "type": "string"
                 },
                 "file_path": {
-                    "description": "Путь к файлу, если есть",
                     "type": "string"
+                },
+                "id": {
+                    "type": "integer"
                 },
                 "priority": {
                     "type": "string"

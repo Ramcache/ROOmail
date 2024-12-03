@@ -345,3 +345,15 @@
 2024-12-03T17:55:49.527+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
 2024-12-03T17:55:50.422+0300	INFO	logger/logger.go:91	Получен запрос на получение задач пользователя
 2024-12-03T17:55:50.422+0300	INFO	logger/logger.go:91	Получение задач для пользователяuserID: 67
+2024-12-03T18:01:18.577+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T18:01:18.592+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:24:21.864+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:24:21.881+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:24:53.507+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:24:53.516+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:37:12.198+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:37:12.216+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:37:21.276+0300	INFO	logger/logger.go:91	Попытка входа пользователя: roo_inform
+2024-12-03T20:37:21.632+0300	INFO	logger/logger.go:91	Успешный вход пользователя: roo_inform
+2024-12-03T20:38:41.681+0300	INFO	logger/logger.go:91	Получен запрос на добавление нового пользователя
+2024-12-03T20:38:41.873+0300	INFO	logger/logger.go:91	Пользователь успешно добавленuserID: 83
