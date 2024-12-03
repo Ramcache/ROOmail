@@ -8,7 +8,9 @@ import (
 	"ROOmail/pkg/utils/jwt_token"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 )
 
 type UserHandler struct {
@@ -25,14 +27,14 @@ func NewUsersHandler(service *UserService, log logger.Logger) *UserHandler {
 // AddUserHandler обрабатывает запрос на добавление нового пользователя в базу данных.
 // @Summary Добавить нового пользователя
 // @Description Добавляет нового пользователя в базу данных с заданными именем, паролем и ролью.
-// @Tags пользователи
+// @Tags users
 // @Accept json
 // @Produce json
 // @Param user body models.User true "Данные пользователя"
 // @Success 201 {object} map[string]interface{} "Сообщение об успешном добавлении и ID нового пользователя"
 // @Failure 400 {object} string "Некорректные данные"
 // @Failure 500 {object} string "Внутренняя ошибка сервера"
-// @Router /users [post]
+// @Router /admin/users/add [post]
 func (h *UserHandler) AddUserHandler(w http.ResponseWriter, r *http.Request) {
 	h.log.Info("Получен запрос на добавление нового пользователя")
 
@@ -58,9 +60,43 @@ func (h *UserHandler) AddUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	h.log.Info("Пользователь успешно добавлен ", "userID: ", userID)
 
-	// Отправляем успешный ответ
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"Пользователь успешно добавлен ", "user_id": %d}`, userID)))
+}
+
+// DeleteUserHandler обрабатывает запрос на удаление пользователя по его ID.
+// @Summary Удалить пользователя
+// @Description Удаляет пользователя из базы данных по его идентификатору (ID).
+// @Tags users
+// @Param id path int true "ID пользователя"
+// @Success 204 "Пользователь успешно удалён"
+// @Failure 400 {object} string "Некорректный запрос"
+// @Failure 404 {object} string "Пользователь не найден"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /admin/users/delete/{id} [delete]
+func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("Получен запрос на удаление пользователя")
+
+	vars := mux.Vars(r)
+	userIDStr := vars["id"]
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		h.log.Error("Некорректный идентификатор пользователя", err)
+		http.Error(w, "Некорректный запрос: некорректный идентификатор пользователя", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteUser(r.Context(), userID)
+	if err != nil {
+		h.log.Error("Не удалось удалить пользователя", err)
+		http.Error(w, fmt.Sprintf("Не удалось удалить пользователя с ID %d", userID), http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Info("Пользователь успешно удалён ", "userID: ", userID)
+
+	w.WriteHeader(http.StatusNoContent)
+	w.Write([]byte(fmt.Sprintf(`{"Пользователь успешно удален ", "user_id": %d}`, userID)))
 }
 
 // UsersSelectHandler

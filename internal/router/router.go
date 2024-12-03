@@ -87,6 +87,7 @@ func registerUserRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	adminRouter.Use(jwt_token.RoleMiddleware("admin"))
 	adminRouter.HandleFunc("/users_list", usersHandler.UsersSelectHandler).Methods("GET")
 	adminRouter.HandleFunc("/users/add", usersHandler.AddUserHandler).Methods("POST")
+	adminRouter.HandleFunc("/users/delete/{id}", usersHandler.DeleteUserHandler).Methods("DELETE")
 
 }
 

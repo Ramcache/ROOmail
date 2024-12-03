@@ -357,3 +357,21 @@
 2024-12-03T20:37:21.632+0300	INFO	logger/logger.go:91	Успешный вход пользователя: roo_inform
 2024-12-03T20:38:41.681+0300	INFO	logger/logger.go:91	Получен запрос на добавление нового пользователя
 2024-12-03T20:38:41.873+0300	INFO	logger/logger.go:91	Пользователь успешно добавленuserID: 83
+2024-12-03T20:44:14.370+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:44:14.389+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:45:57.889+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:45:57.903+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:46:25.390+0300	INFO	logger/logger.go:91	Получен запрос на удаление пользователя
+2024-12-03T20:46:25.511+0300	INFO	logger/logger.go:91	Пользователь успешно удалён userID: 83
+2024-12-03T20:47:52.338+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:47:52.356+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:48:39.564+0300	INFO	logger/logger.go:91	Получен запрос на добавление нового пользователя
+2024-12-03T20:48:39.814+0300	INFO	logger/logger.go:91	Пользователь успешно добавлен userID: 84
+2024-12-03T20:48:51.560+0300	INFO	logger/logger.go:91	Получен запрос на удаление пользователя
+2024-12-03T20:48:51.569+0300	INFO	logger/logger.go:91	Пользователь успешно удалён userID: 84
+2024-12-03T20:49:07.947+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T20:49:07.955+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T20:49:20.405+0300	INFO	logger/logger.go:91	Получен запрос на удаление пользователя
+2024-12-03T20:49:20.542+0300	INFO	logger/logger.go:91	Пользователь успешно удалён userID: 84
+2024-12-03T20:49:34.336+0300	INFO	logger/logger.go:91	Получен запрос на удаление пользователя
+2024-12-03T20:49:34.344+0300	INFO	logger/logger.go:91	Пользователь успешно удалён userID: 82

@@ -34,6 +34,15 @@ func (s *UserService) AddUser(ctx context.Context, username, password, role stri
 	return userID, nil
 }
 
+func (s *UserService) DeleteUser(ctx context.Context, userID int) error {
+	query := `DELETE FROM users WHERE id = $1`
+	_, err := s.db.Exec(ctx, query, userID)
+	if err != nil {
+		return fmt.Errorf("Не удалось удалить пользователя с id %d: %w", userID, err)
+	}
+	return nil
+}
+
 func (s *UserService) GetUsers(username string) ([]models.UsersList, error) {
 	query := "SELECT id, username FROM users"
 	var args []interface{}
