@@ -13,6 +13,7 @@ type TaskInterface interface {
 	CreateTask(ctx context.Context, title, description, dueDateStr, priority string, userIDs []int, filePath string, createdBy int) (string, error)
 	UpdateTask(ctx context.Context, taskID int, title, description, dueDateStr, priority string, userIDs []int) error
 	PatchTask(ctx context.Context, taskID int, updates map[string]interface{}) error
+	DeleteTask(ctx context.Context, taskID int) error
 }
 
 type TaskService struct {
@@ -234,6 +235,32 @@ func (s *TaskService) PatchTask(ctx context.Context, taskID int, updates map[str
 	} else {
 		// Если нечего обновлять в tasks, просто возвращаем nil, т.к. только user_ids обновлены
 		fmt.Println("No fields to update in tasks, only user_ids updated")
+	}
+
+	return nil
+}
+
+func (s *TaskService) DeleteTask(ctx context.Context, taskID int) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		} else {
+			tx.Commit(ctx)
+		}
+	}()
+
+	_, err = tx.Exec(ctx, `DELETE FROM tasks_users WHERE task_id = $1`, taskID)
+	if err != nil {
+		return fmt.Errorf("Failed to delete task-user associations: %w", err)
+	}
+
+	_, err = tx.Exec(ctx, `DELETE FROM tasks WHERE id = $1`, taskID)
+	if err != nil {
+		return fmt.Errorf("Failed to delete task: %w", err)
 	}
 
 	return nil

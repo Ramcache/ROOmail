@@ -62,6 +62,8 @@ func registerTaskRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 
 	protectedRouter.HandleFunc("/tasks/update/{id}", taskHandler.UpdateTaskHandler).Methods("PUT")
 	protectedRouter.HandleFunc("/tasks/update/{id}", taskHandler.PatchTaskHandler).Methods("PATCH")
+	protectedRouter.HandleFunc("/tasks/delete/{id}", taskHandler.DeleteTaskHandler).Methods("DELETE")
+
 }
 
 // Регистрация маршрутов для пользователей

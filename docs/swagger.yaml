@@ -121,6 +121,119 @@ paths:
       summary: Создание новой задачи
       tags:
       - задачи
+  /admin/tasks/delete/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет задачу и все связанные с ней данные
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Задача успешно удалена
+          schema:
+            type: string
+        "400":
+          description: Некорректный идентификатор задачи
+          schema:
+            type: string
+        "401":
+          description: Неавторизованный доступ
+          schema:
+            type: string
+        "500":
+          description: Не удалось удалить задачу
+          schema:
+            type: string
+      summary: Удаление задачи
+      tags:
+      - Задачи
+  /admin/tasks/update/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Обновление одного или нескольких полей задачи по её идентификатору
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Обновляемые поля задачи
+        in: body
+        name: updates
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Задача успешно обновлена
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Некорректный идентификатор задачи или JSON
+          schema:
+            type: string
+        "401":
+          description: Неавторизованный доступ
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      summary: Частичное обновление задачи
+      tags:
+      - Задачи
+    put:
+      consumes:
+      - application/json
+      description: Обновление информации о задаче, такой как название, описание, срок
+        выполнения, приоритет и список пользователей.
+      parameters:
+      - description: Идентификатор задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные задачи для обновления
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/ROOmail_internal_models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"message": "Задача успешно обновлена"}'
+          schema:
+            type: string
+        "400":
+          description: Некорректный запрос
+          schema:
+            type: string
+        "401":
+          description: Неавторизованный доступ
+          schema:
+            type: string
+        "500":
+          description: Ошибка сервера
+          schema:
+            type: string
+      summary: Обновить задачу
+      tags:
+      - Задачи
   /admin/users_list:
     get:
       consumes:
@@ -155,7 +268,7 @@ paths:
             type: object
       summary: Получить список пользователей
       tags:
-      - Users
+      - users
   /auth/login:
     post:
       consumes:

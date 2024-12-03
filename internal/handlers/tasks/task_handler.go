@@ -175,3 +175,49 @@ func (h *TaskHandler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "Задача успешно обновлена"}`))
 }
+
+// DeleteTaskHandler godoc
+// @Summary Удаление задачи
+// @Description Удаляет задачу и все связанные с ней данные
+// @Tags Задачи
+// @Accept json
+// @Produce json
+// @Param id path int true "ID задачи"
+// @Success 200 {string} string "Задача успешно удалена"
+// @Failure 400 {string} string "Некорректный идентификатор задачи"
+// @Failure 401 {string} string "Неавторизованный доступ"
+// @Failure 500 {string} string "Не удалось удалить задачу"
+// @Router /admin/tasks/delete/{id} [delete]
+func (h *TaskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("Получен запрос на удаление задачи")
+
+	vars := mux.Vars(r)
+	taskIDStr := vars["id"]
+	taskID, err := strconv.Atoi(taskIDStr)
+	if err != nil {
+		h.log.Error("Некорректный идентификатор задачи", err)
+		http.Error(w, "Некорректный идентификатор задачи", http.StatusBadRequest)
+		return
+	}
+
+	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
+	if !ok {
+		h.log.Error("Попытка неавторизованного доступа")
+		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
+		return
+	}
+
+	h.log.Info("Удаление задачи", " taskID: ", taskID, " выполняется пользователем: ", userClaims.UserID)
+
+	err = h.service.DeleteTask(r.Context(), taskID)
+	if err != nil {
+		h.log.Error("Не удалось удалить задачу", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.log.Info("Задача успешно удалена", " taskID: ", taskID)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"message": "Задача успешно удалена"}`))
+}

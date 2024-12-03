@@ -251,3 +251,12 @@
 2024-12-03T15:25:23.010+0300	INFO	logger/logger.go:91	Получен запрос на частичное обновление задачи
 2024-12-03T15:25:23.010+0300	INFO	logger/logger.go:91	Частичное обновление задачи обновляется пользователем: 57
 2024-12-03T15:25:23.160+0300	INFO	logger/logger.go:91	Задача успешно обновлена taskID: 24
+2024-12-03T15:33:02.232+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T15:33:02.248+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T15:33:42.393+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T15:33:42.404+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T15:34:12.099+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T15:34:12.114+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T15:34:27.652+0300	INFO	logger/logger.go:91	Получен запрос на удаление задачи
+2024-12-03T15:34:27.652+0300	INFO	logger/logger.go:91	Удаление задачи taskID: 24 выполняется пользователем: 57
+2024-12-03T15:34:27.746+0300	INFO	logger/logger.go:91	Задача успешно удалена taskID: 24
