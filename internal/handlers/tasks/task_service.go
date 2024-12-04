@@ -58,6 +58,42 @@ func (s *TaskService) CreateTask(ctx context.Context, title, description, dueDat
 	return strconv.Itoa(taskID), nil
 }
 
+func (s *TaskService) GetTasksByUser(ctx context.Context, userID int) ([]models.Task, error) {
+	query := `
+		SELECT t.id, t.title, t.description, t.due_date, t.priority, t.file_path, t.created_by
+		FROM tasks t
+		JOIN tasks_users tu ON t.id = tu.task_id
+		WHERE tu.user_id = $1
+		ORDER BY t.due_date ASC
+	`
+
+	rows, err := s.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("Не удалось получить задачи для пользователя %d: %w", userID, err)
+	}
+	defer rows.Close()
+
+	var tasks []models.Task
+	for rows.Next() {
+		var task models.Task
+		var dueDate sql.NullTime
+
+		if err := rows.Scan(&task.ID, &task.Title, &task.Description, &dueDate, &task.Priority, &task.FilePath, &task.CreatedBy); err != nil {
+			return nil, fmt.Errorf("Не удалось отсканировать данные задачи: %w", err)
+		}
+
+		if dueDate.Valid {
+			task.DueDate = dueDate.Time.Format("2006-01-02")
+		} else {
+			task.DueDate = ""
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
+
 func (s *TaskService) GetTasks(ctx context.Context, userID int) ([]models.Task, error) {
 	fmt.Printf("Retrieving tasks for userID: %d\n", userID)
 

@@ -412,3 +412,9 @@
 2024-12-03T21:15:40.549+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
 2024-12-03T21:15:44.074+0300	INFO	logger/logger.go:91	Запрос на обновление данных пользователя
 2024-12-03T21:15:44.266+0300	INFO	logger/logger.go:91	Пользователь успешно обновлёнuserID: 81
+2024-12-03T21:17:55.375+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:17:55.391+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:21:47.246+0300	INFO	logger/logger.go:91	Приложение запущено
+2024-12-03T21:21:47.258+0300	INFO	logger/logger.go:95	Server started at https://localhost:8080
+2024-12-03T21:28:51.789+0300	INFO	logger/logger.go:91	Запрос на скачивание файла
+2024-12-03T21:28:51.976+0300	INFO	logger/logger.go:91	Определённый MIME-тип для файла 1733248894.jpeg: image/jpeg

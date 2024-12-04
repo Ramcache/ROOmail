@@ -504,6 +504,29 @@ paths:
       summary: Получить все задачи пользователя
       tags:
       - Задачи
+  /user/tasks/all/get:
+    get:
+      description: Возвращает список задач, назначенных авторизованному пользователю.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач пользователя
+          schema:
+            items:
+              $ref: '#/definitions/ROOmail_internal_models.Task'
+            type: array
+        "401":
+          description: Неавторизованный доступ
+          schema:
+            type: string
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            type: string
+      summary: Получить задачи пользователя
+      tags:
+      - Задачи
   /users/{id}:
     patch:
       consumes:

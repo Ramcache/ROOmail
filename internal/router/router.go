@@ -74,6 +74,7 @@ func registerTaskRoutes(r *mux.Router, db *pgxpool.Pool, log logger.Logger) {
 	userRouter := r.PathPrefix("/user").Subrouter()
 	userRouter.Use(jwt_token.JWTMiddleware)
 	userRouter.Use(jwt_token.RoleMiddleware("users"))
+	userRouter.HandleFunc("/tasks/all/get", taskHandler.GetUserTasksHandler).Methods("GET")
 	userRouter.HandleFunc("/tasks/get/{id}", taskHandler.GetTasksHandler).Methods("GET")
 }
 

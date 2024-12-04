@@ -67,6 +67,42 @@ func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 	w.Write([]byte(fmt.Sprintf(`{"message": "Задача успешно создана", "task_id": "%s"}`, taskID)))
 }
 
+// GetUserTasksHandler обрабатывает запрос на получение задач, назначенных авторизованному пользователю.
+// @Summary Получить задачи пользователя
+// @Description Возвращает список задач, назначенных авторизованному пользователю.
+// @Tags Задачи
+// @Produce json
+// @Success 200 {array} models.Task "Список задач пользователя"
+// @Failure 401 {object} string "Неавторизованный доступ"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /user/tasks/all/get [get]
+func (h *TaskHandler) GetUserTasksHandler(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("Запрос на получение задач для авторизованного пользователя")
+
+	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
+	if !ok || userClaims.UserID == 0 {
+		h.log.Error("Попытка неавторизованного доступа")
+		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
+		return
+	}
+
+	userID := userClaims.UserID
+	h.log.Info("Получение задач для пользователя", "userID:", userID)
+
+	tasks, err := h.service.GetTasksByUser(r.Context(), userID)
+	if err != nil {
+		h.log.Error("Не удалось получить задачи для пользователя", err)
+		http.Error(w, "Не удалось получить задачи", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(tasks); err != nil {
+		h.log.Error("Ошибка кодирования задач в JSON", err)
+		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
+	}
+}
+
 // GetTasksHandler обрабатывает запрос на получение всех задач, назначенных конкретному пользователю.
 // @Summary Получить все задачи пользователя
 // @Description Получает список задач, назначенных аутентифицированному пользователю.
