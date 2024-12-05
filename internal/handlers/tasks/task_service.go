@@ -11,10 +11,12 @@ import (
 	"time"
 )
 
-type TaskInterface interface {
+type TaskServiceInterface interface {
 	CreateTask(ctx context.Context, title, description, dueDateStr, priority string, userIDs []int, filePath string, createdBy int) (string, error)
-	UpdateTask(ctx context.Context, taskID int, title, description, dueDateStr, priority string, userIDs []int) error
+	UpdateTask(ctx context.Context, taskID int, title, description, dueDateStr, priority string, UserIDs []int, currentUserID int) error
+	GetTaskByID(ctx context.Context, taskID int) (*models.Task, error)
 	GetTasks(ctx context.Context, userID int) ([]models.Task, error)
+	GetTasksByUser(ctx context.Context, userID int) ([]models.Task, error)
 	PatchTask(ctx context.Context, taskID int, updates map[string]interface{}) error
 	DeleteTask(ctx context.Context, taskID int) error
 }
@@ -56,6 +58,50 @@ func (s *TaskService) CreateTask(ctx context.Context, title, description, dueDat
 	}
 
 	return strconv.Itoa(taskID), nil
+}
+
+func (s *TaskService) GetTaskByID(ctx context.Context, taskID int) (*models.Task, error) {
+	query := `
+		SELECT id, title, description, due_date, priority, file_path, created_by
+		FROM tasks
+		WHERE id = $1
+	`
+
+	var task models.Task
+	var dueDate sql.NullTime
+
+	err := s.db.QueryRow(ctx, query, taskID).Scan(&task.ID, &task.Title, &task.Description, &dueDate, &task.Priority, &task.FilePath, &task.CreatedBy)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("Task not found")
+		}
+		return nil, fmt.Errorf("Failed to retrieve task: %w", err)
+	}
+
+	if dueDate.Valid {
+		task.DueDate = dueDate.Time.Format("2006-01-02")
+	} else {
+		task.DueDate = ""
+	}
+
+	userQuery := `SELECT user_id FROM tasks_users WHERE task_id = $1`
+	rows, err := s.db.Query(ctx, userQuery, task.ID)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve users for task %d: %w", task.ID, err)
+	}
+	defer rows.Close()
+
+	var userIDs []int
+	for rows.Next() {
+		var userID int
+		if err := rows.Scan(&userID); err != nil {
+			return nil, fmt.Errorf("Failed to scan user_id for task %d: %w", task.ID, err)
+		}
+		userIDs = append(userIDs, userID)
+	}
+	task.UserIDs = userIDs
+
+	return &task, nil
 }
 
 func (s *TaskService) GetTasksByUser(ctx context.Context, userID int) ([]models.Task, error) {
@@ -253,14 +299,13 @@ func (s *TaskService) PatchTask(ctx context.Context, taskID int, updates map[str
 
 	for key, value := range updates {
 		if key == "user_ids" {
-			// Особая обработка для обновления пользователей
 			var userIDs []int
 			switch v := value.(type) {
 			case []int:
 				userIDs = v
 			case []interface{}:
 				for _, id := range v {
-					userID, ok := id.(float64) // Обычно числа в JSON представляются как float64
+					userID, ok := id.(float64)
 					if !ok {
 						return fmt.Errorf("Invalid user_ids format")
 					}
@@ -270,7 +315,6 @@ func (s *TaskService) PatchTask(ctx context.Context, taskID int, updates map[str
 				return fmt.Errorf("Invalid user_ids format")
 			}
 
-			// Удаляем текущие связи пользователей и добавляем новые, сохраняя sent_by
 			rows, err := s.db.Query(ctx, `SELECT user_id, sent_by FROM tasks_users WHERE task_id = $1`, taskID)
 			if err != nil {
 				return fmt.Errorf("Failed to retrieve current users for task: %w", err)
@@ -286,17 +330,14 @@ func (s *TaskService) PatchTask(ctx context.Context, taskID int, updates map[str
 				currentSentBy[userID] = sentBy
 			}
 
-			// Удаляем текущие связи пользователей
 			_, err = s.db.Exec(ctx, `DELETE FROM tasks_users WHERE task_id = $1`, taskID)
 			if err != nil {
 				return fmt.Errorf("Failed to remove current users for task: %w", err)
 			}
 
-			// Добавляем новых пользователей, сохраняя sent_by, если пользователь уже был связан с задачей
 			for _, userID := range userIDs {
 				sentBy, exists := currentSentBy[userID]
 				if !exists {
-					// Если пользователь новый, используем ID текущего пользователя, выполняющего обновление
 					userClaims, ok := ctx.Value("user").(*jwt_token.Claims)
 					if !ok {
 						return fmt.Errorf("Failed to retrieve user claims from context")
@@ -329,7 +370,6 @@ func (s *TaskService) PatchTask(ctx context.Context, taskID int, updates map[str
 			return fmt.Errorf("Failed to patch task: %w", err)
 		}
 	} else {
-		// Если нечего обновлять в tasks, просто возвращаем nil, т.к. только user_ids обновлены
 		fmt.Println("No fields to update in tasks, only user_ids updated")
 	}
 
