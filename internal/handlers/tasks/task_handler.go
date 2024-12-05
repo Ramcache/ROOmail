@@ -12,13 +12,13 @@ import (
 )
 
 type TaskHandler struct {
-	service *TaskService
-	log     logger.Logger
+	Service TaskServiceInterface
+	Log     logger.Logger
 }
 
-func NewTaskHandler(service *TaskService, log logger.Logger) *TaskHandler {
-	return &TaskHandler{service: service,
-		log: log,
+func NewTaskHandler(service TaskServiceInterface, log logger.Logger) *TaskHandler {
+	return &TaskHandler{Service: service,
+		Log: log,
 	}
 }
 
@@ -35,33 +35,33 @@ func NewTaskHandler(service *TaskService, log logger.Logger) *TaskHandler {
 // @Failure 500 {string} string "Ошибка создания задачи"
 // @Router /admin/tasks/create [post]
 func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("Получен запрос на создание новой задачи")
+	h.Log.Info("Получен запрос на создание новой задачи")
 
 	var req models.Task
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.log.Error("Предоставлен некорректный JSON", err)
+		h.Log.Error("Предоставлен некорректный JSON", err)
 		http.Error(w, "Некорректный JSON", http.StatusBadRequest)
 		return
 	}
 
 	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
 	if !ok {
-		h.log.Error("Попытка неавторизованного доступа")
+		h.Log.Error("Попытка неавторизованного доступа")
 		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
 		return
 	}
 
 	createdBy := userClaims.UserID
-	h.log.Info("Создание задачи", " создано пользователем: ", createdBy)
+	h.Log.Info("Создание задачи", " создано пользователем: ", createdBy)
 
-	taskID, err := h.service.CreateTask(r.Context(), req.Title, req.Description, req.DueDate, req.Priority, req.UserIDs, req.FilePath, createdBy)
+	taskID, err := h.Service.CreateTask(r.Context(), req.Title, req.Description, req.DueDate, req.Priority, req.UserIDs, req.FilePath, createdBy)
 	if err != nil {
-		h.log.Error("Не удалось создать задачу", err)
+		h.Log.Error("Не удалось создать задачу", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.log.Info("Задача успешно создана", " taskID: ", taskID)
+	h.Log.Info("Задача успешно создана", " taskID: ", taskID)
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf(`{"message": "Задача успешно создана", "task_id": "%s"}`, taskID)))
@@ -77,28 +77,28 @@ func (h *TaskHandler) CreateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {object} string "Внутренняя ошибка сервера"
 // @Router /user/tasks/all/get [get]
 func (h *TaskHandler) GetUserTasksHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("Запрос на получение задач для авторизованного пользователя")
+	h.Log.Info("Запрос на получение задач для авторизованного пользователя")
 
 	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
 	if !ok || userClaims.UserID == 0 {
-		h.log.Error("Попытка неавторизованного доступа")
+		h.Log.Error("Попытка неавторизованного доступа")
 		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
 		return
 	}
 
 	userID := userClaims.UserID
-	h.log.Info("Получение задач для пользователя", "userID:", userID)
+	h.Log.Info("Получение задач для пользователя", "userID:", userID)
 
-	tasks, err := h.service.GetTasksByUser(r.Context(), userID)
+	tasks, err := h.Service.GetTasksByUser(r.Context(), userID)
 	if err != nil {
-		h.log.Error("Не удалось получить задачи для пользователя", err)
+		h.Log.Error("Не удалось получить задачи для пользователя", err)
 		http.Error(w, "Не удалось получить задачи", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
-		h.log.Error("Ошибка кодирования задач в JSON", err)
+		h.Log.Error("Ошибка кодирования задач в JSON", err)
 		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
 	}
 }
@@ -116,28 +116,28 @@ func (h *TaskHandler) GetUserTasksHandler(w http.ResponseWriter, r *http.Request
 // @Failure 500 {object} string "Внутренняя ошибка сервера"
 // @Router /tasks/get/{id} [get]
 func (h *TaskHandler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("Получен запрос на получение задач пользователя")
+	h.Log.Info("Получен запрос на получение задач пользователя")
 
 	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
 	if !ok {
-		h.log.Error("Попытка неавторизованного доступа")
+		h.Log.Error("Попытка неавторизованного доступа")
 		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
 		return
 	}
 
 	userID := userClaims.UserID
-	h.log.Info("Получение задач для пользователя", "userID: ", userID)
+	h.Log.Info("Получение задач для пользователя", "userID: ", userID)
 
-	tasks, err := h.service.GetTasks(r.Context(), userID)
+	tasks, err := h.Service.GetTasks(r.Context(), userID)
 	if err != nil {
-		h.log.Error("Не удалось получить задачи", err)
+		h.Log.Error("Не удалось получить задачи", err)
 		http.Error(w, "Не удалось получить задачи", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(tasks); err != nil {
-		h.log.Error("Ошибка кодирования задач в JSON", err)
+		h.Log.Error("Ошибка кодирования задач в JSON", err)
 		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
 	}
 }
@@ -156,42 +156,42 @@ func (h *TaskHandler) GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Ошибка сервера"
 // @Router /admin/tasks/update/{id} [put]
 func (h *TaskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("Получен запрос на обновление задачи")
+	h.Log.Info("Получен запрос на обновление задачи")
 
 	vars := mux.Vars(r)
 	taskIDStr := vars["id"]
 	taskID, err := strconv.Atoi(taskIDStr)
 	if err != nil {
-		h.log.Error("Некорректный идентификатор задачи", err)
+		h.Log.Error("Некорректный идентификатор задачи", err)
 		http.Error(w, "Некорректный идентификатор задачи", http.StatusBadRequest)
 		return
 	}
 
 	var req models.Task
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.log.Error("Предоставлен некорректный JSON", err)
+		h.Log.Error("Предоставлен некорректный JSON", err)
 		http.Error(w, "Некорректный JSON", http.StatusBadRequest)
 		return
 	}
 
 	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
 	if !ok {
-		h.log.Error("Попытка неавторизованного доступа")
+		h.Log.Error("Попытка неавторизованного доступа")
 		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
 		return
 	}
 
-	h.log.Info("Обновление задачи", " обновляется пользователем: ", userClaims.UserID)
+	h.Log.Info("Обновление задачи", " обновляется пользователем: ", userClaims.UserID)
 
 	currentUserID := userClaims.UserID
-	err = h.service.UpdateTask(r.Context(), taskID, req.Title, req.Description, req.DueDate, req.Priority, req.UserIDs, currentUserID)
+	err = h.Service.UpdateTask(r.Context(), taskID, req.Title, req.Description, req.DueDate, req.Priority, req.UserIDs, currentUserID)
 	if err != nil {
-		h.log.Error("Не удалось обновить задачу", err)
+		h.Log.Error("Не удалось обновить задачу", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.log.Info("Задача успешно обновлена", " taskID: ", taskID)
+	h.Log.Info("Задача успешно обновлена", " taskID: ", taskID)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "Задача успешно обновлена"}`))
@@ -211,41 +211,41 @@ func (h *TaskHandler) UpdateTaskHandler(w http.ResponseWriter, r *http.Request) 
 // @Failure 500 {string} string "Ошибка сервера"
 // @Router /admin/tasks/update/{id} [patch]
 func (h *TaskHandler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("Получен запрос на частичное обновление задачи")
+	h.Log.Info("Получен запрос на частичное обновление задачи")
 
 	vars := mux.Vars(r)
 	taskIDStr := vars["id"]
 	taskID, err := strconv.Atoi(taskIDStr)
 	if err != nil {
-		h.log.Error("Некорректный идентификатор задачи", err)
+		h.Log.Error("Некорректный идентификатор задачи", err)
 		http.Error(w, "Некорректный идентификатор задачи", http.StatusBadRequest)
 		return
 	}
 
 	var updates map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&updates); err != nil {
-		h.log.Error("Предоставлен некорректный JSON", err)
+		h.Log.Error("Предоставлен некорректный JSON", err)
 		http.Error(w, "Некорректный JSON", http.StatusBadRequest)
 		return
 	}
 
 	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
 	if !ok {
-		h.log.Error("Попытка неавторизованного доступа")
+		h.Log.Error("Попытка неавторизованного доступа")
 		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
 		return
 	}
 
-	h.log.Info("Частичное обновление задачи", " обновляется пользователем: ", userClaims.UserID)
+	h.Log.Info("Частичное обновление задачи", " обновляется пользователем: ", userClaims.UserID)
 
-	err = h.service.PatchTask(r.Context(), taskID, updates)
+	err = h.Service.PatchTask(r.Context(), taskID, updates)
 	if err != nil {
-		h.log.Error("Не удалось обновить задачу", err)
+		h.Log.Error("Не удалось обновить задачу", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.log.Info("Задача успешно обновлена", " taskID: ", taskID)
+	h.Log.Info("Задача успешно обновлена", " taskID: ", taskID)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "Задача успешно обновлена"}`))
@@ -264,34 +264,34 @@ func (h *TaskHandler) PatchTaskHandler(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Не удалось удалить задачу"
 // @Router /admin/tasks/delete/{id} [delete]
 func (h *TaskHandler) DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	h.log.Info("Получен запрос на удаление задачи")
+	h.Log.Info("Получен запрос на удаление задачи")
 
 	vars := mux.Vars(r)
 	taskIDStr := vars["id"]
 	taskID, err := strconv.Atoi(taskIDStr)
 	if err != nil {
-		h.log.Error("Некорректный идентификатор задачи", err)
+		h.Log.Error("Некорректный идентификатор задачи", err)
 		http.Error(w, "Некорректный идентификатор задачи", http.StatusBadRequest)
 		return
 	}
 
 	userClaims, ok := r.Context().Value("user").(*jwt_token.Claims)
 	if !ok {
-		h.log.Error("Попытка неавторизованного доступа")
+		h.Log.Error("Попытка неавторизованного доступа")
 		http.Error(w, "Неавторизованный доступ", http.StatusUnauthorized)
 		return
 	}
 
-	h.log.Info("Удаление задачи", " taskID: ", taskID, " выполняется пользователем: ", userClaims.UserID)
+	h.Log.Info("Удаление задачи", " taskID: ", taskID, " выполняется пользователем: ", userClaims.UserID)
 
-	err = h.service.DeleteTask(r.Context(), taskID)
+	err = h.Service.DeleteTask(r.Context(), taskID)
 	if err != nil {
-		h.log.Error("Не удалось удалить задачу", err)
+		h.Log.Error("Не удалось удалить задачу", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.log.Info("Задача успешно удалена", " taskID: ", taskID)
+	h.Log.Info("Задача успешно удалена", " taskID: ", taskID)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message": "Задача успешно удалена"}`))

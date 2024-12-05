@@ -6,13 +6,10 @@ import (
 )
 
 func IsTokenExpired(token string) bool {
-	// Здесь добавляется логика извлечения времени истечения токена.
-	// Для примера, пусть токен хранит время истечения в секундах через разделитель ":"
-	// tokenFormat: "<token>:<expiryUnixTimestamp>"
 	var expiryTimestamp int64
 	_, err := fmt.Sscanf(token, "%*s:%d", &expiryTimestamp)
 	if err != nil {
-		return false // Если не удалось извлечь время истечения, предполагаем, что токен не истек
+		return false
 	}
 
 	expiryTime := time.Unix(expiryTimestamp, 0)

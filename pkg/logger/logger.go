@@ -29,22 +29,16 @@ type zapLogger struct {
 
 // NewZapLogger создает новый экземпляр zapLogger
 func NewZapLogger() Logger {
-	// Получаем write syncer для файла логов с датой
 	fileSyncer := getLogWriterWithDate()
 
-	// Создаем write syncer для консоли
 	consoleSyncer := zapcore.AddSync(os.Stdout)
 
-	// Создаем энкодер для логов
 	encoder := getEncoder()
 
-	// Объединяем консольный и файловый write syncer'ы
 	combinedSyncer := zapcore.NewMultiWriteSyncer(consoleSyncer, fileSyncer)
 
-	// Создаем ядро с объединенным syncer'ом
 	core := zapcore.NewCore(encoder, combinedSyncer, zapcore.DebugLevel)
 
-	// Создаем логгер
 	logger := zap.New(core, zap.AddCaller())
 	sugar := logger.Sugar()
 
@@ -73,10 +67,8 @@ func getLogWriterWithDate() zapcore.WriteSyncer {
 		}
 	}
 
-	// Получаем сегодняшнюю дату в формате "YYYY-MM-DD"
 	currentDate := time.Now().Format("2006-01-02")
 
-	// Создаем файл логов с датой
 	logFileName := filepath.Join(logDir, "logs-"+currentDate+".txt")
 
 	file, err := os.OpenFile(logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -86,7 +78,6 @@ func getLogWriterWithDate() zapcore.WriteSyncer {
 	return zapcore.AddSync(file)
 }
 
-// Логирование
 func (z *zapLogger) Info(args ...interface{}) {
 	z.logger.Info(args...)
 }

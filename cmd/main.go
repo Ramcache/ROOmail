@@ -27,34 +27,26 @@ import (
 // @host localhost:8080
 // @BasePath /
 func main() {
-	// Загрузка .env файла
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 		os.Exit(1)
 	}
 
-	// Инициализация логгера
 	log := logger.NewZapLogger()
 	log.Info("Приложение запущено")
 
-	// Загрузка конфигурации
 	cfg := config.LoadConfig()
 
-	// Инициализация базы данных
 	dbErr := db.InitDB()
 	if dbErr != nil {
 		log.Error("Failed to initialize database: ", dbErr)
 		os.Exit(1)
 	}
 
-	database := db.DB // Используем глобальную переменную DB из пакета db
+	database := db.DB
 
-	// Инициализация маршрутизатора
 	r := router.InitRouter(database, cfg)
 
-	// Пути к сертификату и ключу
-
-	// Запуск HTTPS-сервера
 	serverAddr := "https://localhost" + cfg.ServerAddress
 	log.Infof("Server started at %s", serverAddr)
 
